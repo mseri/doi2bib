@@ -1,5 +1,5 @@
 (executable
  (name doi2bib)
- (libraries astring clap cohttp-lwt-unix)
+ (libraries astring clap cohttp-lwt-unix ezxmlm)
  (preprocess
   (pps lwt_ppx)))
