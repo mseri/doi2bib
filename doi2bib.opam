@@ -8,6 +8,7 @@ homepage: "https://github.com/mseri/doi2bib"
 bug-reports: "https://github.com/mseri/doi2bib/issues"
 depends: [
   "dune" {>= "2.0"}
+  "astring" {>= "0.8.0"}
   "cohttp-lwt-unix" {>= "2.5.0"}
   "clap" {>= "0.1.0"}
   "lwt_ppx" {>= "2.0.0"}
