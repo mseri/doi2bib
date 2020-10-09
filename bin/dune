@@ -1,0 +1,5 @@
+(executable
+ (name doi2bib)
+ (libraries clap cohttp-lwt-unix)
+ (preprocess
+  (pps lwt_ppx)))
