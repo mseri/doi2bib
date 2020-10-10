@@ -14,7 +14,6 @@ depends: [
   "ezxmlm" {>= "1.1.0"}
   "lwt_ppx" {>= "2.0.0"}
   ("tls" | "lwt_ssl")
-  "odoc" {with-doc}
 ]
 build: [
   ["dune" "subst"] {dev}
@@ -27,7 +26,6 @@ build: [
     jobs
     "@install"
     "@runtest" {with-test}
-    "@doc" {with-doc}
   ]
 ]
 dev-repo: "git+https://github.com/mseri/doi2bib.git"
