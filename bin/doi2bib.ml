@@ -64,16 +64,14 @@ let parse_atom id atom =
     ^ (String.cut ~sep:" " title |> Option.map fst |> Option.value ~default:"")
   in
   Printf.sprintf
-    {|
-@misc{%s,
+    {|@misc{%s,
       title={%s}, 
       author={%s},
       year={%s},
       eprint={%s},
       archivePrefix={arXiv},
       primaryClass={%s}
-}
-|}
+}|}
     bibid
     title
     authors
