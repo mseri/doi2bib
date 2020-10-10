@@ -86,9 +86,14 @@ jobs:
         run: |
           git config --global user.name github-actions
           git config --global user.email github-actions-bot@users.noreply.github.com
+      
       - name: Define env (unix)
         if: ${{ runner.os != 'Windows' }}
         run: echo "::set-env name=GITHUB_TAG::${GITHUB_REF#refs/*/}"
+      
+      - name: Define env (macos)
+        if: ${{ runner.os == 'macOS' }}
+        run: echo "::set-env name=PKG_CONFIG_PATH::$(brew --prefix openssl)/lib/pkgconfig"
 
       - name: Define env (windows)
         if: ${{ runner.os == 'Windows' }}
@@ -99,6 +104,7 @@ jobs:
       
       - name: Install dependencies
         run: |
+          opam depext .
           opam install --deps-only .
           opam install ocamlformat
 
