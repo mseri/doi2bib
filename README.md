@@ -1,7 +1,25 @@
 # doi2bib
-Small CLI to get a bib entry from a doi or arxiv id
+Small CLI to get a bibtex entry from a DOI or an arXiv ID 
 
 Usage:
+
+    $ doi2bib --help
+    SYNOPSIS
+
+        doi2bib <ID>
+
+    DESCRIPTION
+
+        A little CLI tool to get the bibtex entry for a given DOI or arXivID.
+
+    OPTIONS
+
+        ID
+            A DOI or an arXiv ID. The tool tries to automatically infer what kind of
+            ID you are using. You can force the cli to lookup a DOI by using the
+            form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
+
+Examples:
 
     doi2bib 10.1007/s10569-019-9946-9
     doi2bib doi:10.4171/JST/226
