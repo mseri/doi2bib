@@ -20,14 +20,20 @@ let parse_args () =
 
 let parse_id id =
   let open Astring in
+  let is_prefix affix s = String.is_prefix ~affix (String.Ascii.lowercase s) in
+  let sub start s = String.sub ~start s |> String.Sub.to_string |> String.trim in
+  let contains c s = String.exists (fun c' -> c' = c) s in
   match id with
-  | doi when String.is_prefix ~affix:"doi:" (String.Ascii.lowercase doi) ->
-    String.sub ~start:4 doi |> String.Sub.to_string |> fun s -> DOI (String.trim s)
-  | doi when String.exists (fun c -> c = '/') doi -> DOI (String.trim doi)
-  | arxiv when String.is_prefix ~affix:"arxiv:" (String.Ascii.lowercase arxiv) ->
-    String.sub ~start:6 arxiv |> String.Sub.to_string |> fun s -> ArXiv (String.trim s)
-  | arxiv when String.exists (fun c -> c = '.') arxiv -> ArXiv (String.trim arxiv)
-  | id -> failwith ("Malformed ID: " ^ id)
+  | doi when is_prefix "doi:" doi -> DOI (sub 4 doi)
+  | doi when contains '/' doi -> DOI (String.trim doi)
+  | arxiv when is_prefix "arxiv:" arxiv -> ArXiv (sub 6 arxiv)
+  | arxiv when contains '.' arxiv -> ArXiv (String.trim arxiv)
+  | _ ->
+    failwith
+      ("Unable to parse ID: '"
+      ^ id
+      ^ "'. You can force me to consider it by prepending 'doi:' or 'arxiv:' as \
+         appropriate.")
 
 
 let parse_atom id atom =
@@ -42,29 +48,32 @@ let parse_atom id atom =
   in
   let year =
     try entry |> member "updated" |> to_string |> fun s -> String.sub s 0 4 with
-    | Ezxmlm.Tag_not_found _ ->
+    | Tag_not_found _ ->
       entry |> member "published" |> to_string |> fun s -> String.sub s 0 4
   in
   let cat =
     entry |> member_with_attr "primary_category" |> fun (a, _) -> get_attr "term" a
   in
   let bibid =
-    (match Astring.String.cuts ~empty:false ~sep:" " authors with
+    let open Astring in
+    (match String.cuts ~empty:false ~sep:" " authors with
     | _ :: s :: _ -> s
     | s :: _ -> s
     | [] -> "")
     ^ year
-    ^ (Astring.String.cut ~sep:" " title |> Option.value ~default:("", "") |> fst)
+    ^ (String.cut ~sep:" " title |> Option.map fst |> Option.value ~default:"")
   in
   Printf.sprintf
-    {|@misc{%s,
+    {|
+@misc{%s,
       title={%s}, 
       author={%s},
       year={%s},
       eprint={%s},
       archivePrefix={arXiv},
       primaryClass={%s}
-}|}
+}
+|}
     bibid
     title
     authors
@@ -73,60 +82,58 @@ let parse_atom id atom =
     cat
 
 
+let rec get ?headers uri =
+  let%lwt resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
+  let code = Cohttp_lwt.(resp |> Response.status |> Cohttp.Code.code_of_status) in
+  match code with
+  | 200 ->
+    let%lwt body = Cohttp_lwt.Body.to_string body in
+    Lwt.return body
+  | 302 ->
+    let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
+    (match uri' with
+    | Some uri -> get uri
+    | None ->
+      Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
+  | _ ->
+    Lwt.fail_with
+      ("Unexpected response: got "
+      ^ string_of_int code
+      ^ " trying to access '"
+      ^ Uri.to_string uri
+      ^ "'.")
+
+
 let bib_of_doi doi =
   let uri = "https://doi.org/" ^ String.trim doi |> Uri.of_string in
-  let open Cohttp in
-  let headers = Header.of_list [ "Accept", "application/x-bibtex"; "charset", "utf-8" ] in
-  let%lwt resp, body = Cohttp_lwt_unix.Client.get ~headers uri in
-  let code = Cohttp_lwt.(resp |> Response.status |> Code.code_of_status) in
-  match code with
-  | 200 -> body |> Cohttp_lwt.Body.to_string
-  | 302 ->
-    let uri = Cohttp_lwt.(resp |> Response.headers |> Header.get_location) in
-    (match uri with
-    | Some uri ->
-      let%lwt resp, body = Cohttp_lwt_unix.Client.get ~headers uri in
-      let code = Cohttp_lwt.(resp |> Response.status |> Code.code_of_status) in
-      if code = 200
-      then body |> Cohttp_lwt.Body.to_string
-      else
-        Lwt.fail_with
-          ("Response status error (2): expected 200, got " ^ string_of_int code)
-    | None -> Lwt.fail_with "Response status error: cannot obtain bibtex entry")
-  | _ -> Lwt.fail_with ("Response status error: expected 200, got " ^ string_of_int code)
+  let headers =
+    Cohttp.Header.of_list [ "Accept", "application/x-bibtex"; "charset", "utf-8" ]
+  in
+  get ~headers uri
 
 
 let bib_of_arxiv arxiv =
   let uri =
     "https://export.arxiv.org/api/query?id_list=" ^ String.trim arxiv |> Uri.of_string
   in
-  let open Cohttp in
-  let%lwt resp, body = Cohttp_lwt_unix.Client.get uri in
-  let code = Cohttp_lwt.(resp |> Response.status |> Code.code_of_status) in
-  match code with
-  | 200 ->
-    let%lwt body = body |> Cohttp_lwt.Body.to_string in
-    let _, atom_blob = Ezxmlm.from_string body in
-    let open Ezxmlm in
-    (try
-       let doi =
-         atom_blob |> member "feed" |> member "entry" |> member "doi" |> to_string
-       in
-       bib_of_doi doi
-     with
-    | Ezxmlm.Tag_not_found _ -> parse_atom arxiv atom_blob |> Lwt.return)
-  | _ -> Lwt.fail_with ("Response status error: expected 200, got " ^ string_of_int code)
+  let%lwt body = get uri in
+  let _, atom_blob = Ezxmlm.from_string body in
+  try
+    let doi =
+      Ezxmlm.(atom_blob |> member "feed" |> member "entry" |> member "doi" |> to_string)
+    in
+    bib_of_doi doi
+  with
+  | Ezxmlm.Tag_not_found _ -> parse_atom arxiv atom_blob |> Lwt.return
+
+
+let get_bib_entry = function
+  | DOI doi -> bib_of_doi doi
+  | ArXiv arxiv -> bib_of_arxiv arxiv
 
 
 let () =
   let id = parse_args () |> parse_id in
-  let bibtex =
-    match id with
-    | DOI doi -> bib_of_doi doi
-    | ArXiv arxiv ->
-      print_endline arxiv;
-      bib_of_arxiv arxiv
-  in
   Lwt_main.run
-    (let%lwt bibtex = bibtex in
+    (let%lwt bibtex = get_bib_entry id in
      Lwt_io.printf "%s" bibtex)
