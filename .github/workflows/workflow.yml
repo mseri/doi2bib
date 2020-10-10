@@ -106,19 +106,23 @@ jobs:
         run: |
           opam depext .
           opam install --deps-only .
-          opam install ocamlformat
 
       - name: Build project
         run: opam exec -- dune build -p doi2bib
 
       - name: Check code formatting
         if: ${{ success() && startsWith(runner.os, 'Linux') }}
-        run: opam exec -- dune build @fmt
+        run: |
+          opam install ocamlformat
+          opam exec -- dune build @fmt
+      
+      - name: Run tests
+        run: opam exec -- dune runtest -p doi2bib
 
       - name: Create release archive
         if: ${{ success() }}
-        run: |
-          opam exec -- tar czf release.tar.gz -C _build/default/bin/ doi2bib.exe
+        run: opam exec -- tar czf release.tar.gz -C _build/default/bin/ doi2bib.exe
+      
       - name: Upload build artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
