@@ -12,7 +12,7 @@
 
 (package
  (name doi2bib)
- (synopsis "Little CLI tool to get bibtex entries out of doi or arxiv ids.")
+ (synopsis "Little CLI tool to get bibtex entries out of doi or arxiv ids")
  (depends
   (astring (>= 0.8.0))
   (cohttp-lwt-unix (>= 2.5.0))
