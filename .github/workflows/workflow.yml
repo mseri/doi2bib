@@ -104,7 +104,6 @@ jobs:
       
       - name: Install dependencies
         run: |
-          opam depext .
           opam install tls
           opam install astring clap cohttp-lwt-unix ezxmlm lwt_ppx
 
