@@ -3,7 +3,7 @@
 
 (cram enable)
 
-(generate_opam_files true)
+(generate_opam_files false)
 
 (source (github mseri/doi2bib))
 (license MIT)
