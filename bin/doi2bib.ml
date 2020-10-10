@@ -8,9 +8,9 @@ let parse_args () =
     Clap.mandatory_string
       ~last:true
       ~description:
-        "A DOI or an arXiv ID. The DOI nust be in the form 'prefix/suffix' or \
-         'doi:prefix/suffix' while the arXiv ID must be in the form 'value.value' or \
-         'arXiv:value.value'"
+        "A DOI or an arXiv ID. The tool tries to automatically infer what kind of ID you \
+         are using. You can force the cli to lookup a DOI by using the form 'doi:ID' or \
+         an arXiv ID by using the form 'arXiv:ID'."
       ~placeholder:"ID"
       ()
   in
