@@ -49,7 +49,6 @@ jobs:
             suffix: x86_64-unknown-linux-musl
           - os: windows-latest
             suffix: x86_64-pc-windows-gnu
-            stdlib_path: D:\a\caramel\caramel\_build\default\src\stdlib
 
     env:
       SKIP_TEST: ${{ matrix.skip_test }}
@@ -96,8 +95,7 @@ jobs:
         run: |
           $tag = "${{github.ref}}".Split("/")["${{github.ref}}".Split("/").Length -1]
           echo "::set-env name=GITHUB_TAG::$(echo $tag)"
-          echo "::set-env name=CARAMELC_STDLIB_PATH::${{ matrix.stdlib_path }}"
-      
+
       - name: Install dependencies
         run: |
           opam depext tls
@@ -125,7 +123,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           path: release.tar.gz
-          name: caramel-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
+          name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
           if-no-files-found: error
 
       - name: Upload release tarball
@@ -137,5 +135,5 @@ jobs:
         with:
           upload_url: ${{ needs.create_draft_release.outputs.upload_url }}
           asset_path: release.tar.gz
-          asset_name: caramel-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
+          asset_name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
           asset_content_type: application/zip
