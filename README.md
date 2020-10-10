@@ -1,5 +1,5 @@
 # doi2bib
-Small CLI to get a bibtex entry from a DOI or an arXiv ID 
+Small CLI to get a bibtex entry from a DOI or an arXiv ID.
 
 Usage:
 
@@ -19,6 +19,8 @@ Usage:
             ID you are using. You can force the cli to lookup a DOI by using the
             form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
 
+It will output the bibtex entry, using the published details when possible.
+
 Examples:
 
     doi2bib 10.1007/s10569-019-9946-9
@@ -26,7 +28,8 @@ Examples:
     doi2bib arXiv:1609.01724
     doi2bib 1902.00436
 
-It will output the bibtex entry, using the published details when possible.
+Each release comes with attached binaries for windows, mac and linux.
+A statically built linux binary is in the works, hopefully available soon.
 
 To run the tests
 
