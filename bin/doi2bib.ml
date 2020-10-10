@@ -25,8 +25,8 @@ let parse_id id =
   let contains c s = String.exists (fun c' -> c' = c) s in
   match id with
   | doi when is_prefix "doi:" doi -> DOI (sub 4 doi)
-  | doi when contains '/' doi -> DOI (String.trim doi)
   | arxiv when is_prefix "arxiv:" arxiv -> ArXiv (sub 6 arxiv)
+  | doi when contains '/' doi -> DOI (String.trim doi)
   | arxiv when contains '.' arxiv -> ArXiv (String.trim arxiv)
   | _ ->
     failwith
@@ -92,14 +92,14 @@ let rec get ?headers uri =
   | 302 ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri' with
-    | Some uri -> get uri
+    | Some uri -> get ?headers uri
     | None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | _ ->
     Lwt.fail_with
-      ("Unexpected response: got "
+      ("Unexpected response: got '"
       ^ string_of_int code
-      ^ " trying to access '"
+      ^ "' trying to access '"
       ^ Uri.to_string uri
       ^ "'.")
 

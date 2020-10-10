@@ -1,5 +1,7 @@
-(lang dune 2.0)
+(lang dune 2.7)
 (name doi2bib)
+
+(cram enable)
 
 (generate_opam_files true)
 

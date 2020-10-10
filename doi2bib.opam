@@ -7,16 +7,17 @@ license: "MIT"
 homepage: "https://github.com/mseri/doi2bib"
 bug-reports: "https://github.com/mseri/doi2bib/issues"
 depends: [
-  "dune" {>= "2.0"}
+  "dune" {>= "2.7"}
   "astring" {>= "0.8.0"}
   "cohttp-lwt-unix" {>= "2.5.0"}
   "clap" {>= "0.1.0"}
   "ezxmlm" {>= "1.1.0"}
   "lwt_ppx" {>= "2.0.0"}
   "lwt_ssl" {>= "1.1.2"}
+  "odoc" {with-doc}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"
