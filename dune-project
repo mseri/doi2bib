@@ -3,7 +3,7 @@
 
 (cram enable)
 
-(generate_opam_files false)
+(generate_opam_files true)
 
 (source (github mseri/doi2bib))
 (license MIT)
@@ -19,5 +19,5 @@
   (clap (>= 0.1.0))
   (ezxmlm (>= 1.1.0))
   (lwt_ppx (>= 2.0.0))
-  (lwt_ssl (>= 1.1.2))  ; tls)
+  (tls (>= 0.12.0))
  ))

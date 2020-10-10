@@ -13,7 +13,8 @@ depends: [
   "clap" {>= "0.1.0"}
   "ezxmlm" {>= "1.1.0"}
   "lwt_ppx" {>= "2.0.0"}
-  ("tls" | "lwt_ssl")
+  "tls" {>= "0.12.0"}
+  "odoc" {with-doc}
 ]
 build: [
   ["dune" "subst"] {dev}
@@ -26,6 +27,7 @@ build: [
     jobs
     "@install"
     "@runtest" {with-test}
+    "@doc" {with-doc}
   ]
 ]
 dev-repo: "git+https://github.com/mseri/doi2bib.git"
