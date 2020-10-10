@@ -33,11 +33,3 @@ To run the tests
     opam install --deps-only .
     dune build -p doi2bib
     dune runtest -p doi2bib
-
-
-### TODO
-
- - extract journal information from arxiv if doi is not available
- - accept lists of ids
- - use github actions to compile executable binaries and publish the artifacts (see hiw caramel does it!)
- 
