@@ -2,5 +2,4 @@
  (name doi2bib)
  (public_name doi2bib)
  (libraries astring clap cohttp-lwt-unix ezxmlm)
- (preprocess
-  (pps lwt_ppx)))
+ (preprocess future_syntax))

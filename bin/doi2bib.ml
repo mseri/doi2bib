@@ -81,11 +81,12 @@ let parse_atom id atom =
 
 
 let rec get ?headers uri =
-  let%lwt resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
+  let open Lwt.Syntax in
+  let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
   let code = Cohttp_lwt.(resp |> Response.status |> Cohttp.Code.code_of_status) in
   match code with
   | 200 ->
-    let%lwt body = Cohttp_lwt.Body.to_string body in
+    let* body = Cohttp_lwt.Body.to_string body in
     Lwt.return body
   | 302 ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
@@ -114,7 +115,8 @@ let bib_of_arxiv arxiv =
   let uri =
     "https://export.arxiv.org/api/query?id_list=" ^ String.trim arxiv |> Uri.of_string
   in
-  let%lwt body = get uri in
+  let open Lwt.Syntax in
+  let* body = get uri in
   let _, atom_blob = Ezxmlm.from_string body in
   try
     let doi =
@@ -132,6 +134,7 @@ let get_bib_entry = function
 
 let () =
   let id = parse_args () |> parse_id in
+  let open Lwt.Syntax in
   Lwt_main.run
-    (let%lwt bibtex = get_bib_entry id in
+    (let* bibtex = get_bib_entry id in
      Lwt_io.printf "%s" bibtex)
