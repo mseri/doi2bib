@@ -36,3 +36,8 @@ To run the tests
     opam install --deps-only .
     dune build -p doi2bib
     dune runtest -p doi2bib
+
+API references:
+
+- [DOI content negotiarion](https://citation.crosscite.org/docs.html)
+- [arXiv API](https://arxiv.org/help/api/index)
