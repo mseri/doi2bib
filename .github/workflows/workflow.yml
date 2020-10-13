@@ -44,9 +44,6 @@ jobs:
           - os: ubuntu-18.04
             ocaml-version: 4.11.1
             suffix: x86_64-unknown-linux-gnu
-          - os: ubuntu-20.04
-            ocaml-version: 4.11.1+musl+static+flambda
-            suffix: x86_64-unknown-linux-musl
           - os: windows-latest
             suffix: x86_64-pc-windows-gnu
 
