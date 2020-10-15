@@ -1,8 +1,6 @@
 name: Main workflow
 
-on:
-  - push
-  - pull_request
+on: [push, pull_request]
 
 jobs:
   create_draft_release:
