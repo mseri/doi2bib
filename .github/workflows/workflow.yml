@@ -34,8 +34,6 @@ jobs:
           - windows-latest
         ocaml-version:
           - 4.11.1
-        skip_test:
-          - false
         include:
           - os: macos-latest
             suffix: x86_64-apple-darwin
@@ -46,7 +44,6 @@ jobs:
             suffix: x86_64-pc-windows-gnu
 
     env:
-      SKIP_TEST: ${{ matrix.skip_test }}
       OCAML_VERSION: ${{ matrix.ocaml-version }}
       OS: ${{ matrix.os }}
 
@@ -65,12 +62,12 @@ jobs:
            ~/.opam
            _build
            C:\cygwin
-           D:\a\caramel\caramel
           key: ${{ matrix.os }}-${{ matrix.ocaml-version }}-${{ env.cache-name }}-${{ hashFiles('**/*.opam*') }}
           restore-keys: |
             ${{ matrix.os }}-${{ matrix.ocaml-version }}-${{ env.cache-name }}-
             ${{ matrix.os }}-${{ matrix.ocaml-version }}-
             ${{ matrix.os }}-
+
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
         with:
@@ -136,6 +133,8 @@ jobs:
   cross_compile:
     name: Musl cross compilation build
 
+    needs: [create_draft_release, build]
+
     strategy:
       fail-fast: false
       matrix:
@@ -162,9 +161,7 @@ jobs:
               "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
               "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#c62b045106fafa407874053bdd79273a8f591352",
               "@opam/num": "github:dune-universe/num:num.opam#bdb2d7653e927e142b701b51d89f393471279713",
-              "@opam/cstruct-sexp": "5.2.0",
-              "esy-gmp": "EduardoRFS/esy-gmp:package.json#c7112b03da47a5ed5fa4b77a97a11210387f42e3"
-            }
+              "@opam/cstruct-sexp": "5.2.0"            }
           }' > esy.json
 
       - uses: actions/setup-node@v1
