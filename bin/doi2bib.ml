@@ -112,7 +112,7 @@ let bib_of_doi doi =
   in
   let fallback =
     Uri.of_string
-      ("https://crosscite.org/citeproc/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US")
+      ("https://citation.crosscite.org/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US")
   in
   get ~headers ~fallback uri
 
