@@ -80,7 +80,7 @@ let parse_atom id atom =
     cat
 
 
-let rec get ?headers uri =
+let rec get ?headers ?fallback uri =
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
   let code = Cohttp_lwt.(resp |> Response.status |> Cohttp.Code.code_of_status) in
@@ -94,6 +94,8 @@ let rec get ?headers uri =
     | Some uri -> get ?headers uri
     | None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
+  | d when (d = 404 || d = 504) && Option.is_some fallback ->
+    fallback |> Option.value ~default:(assert false) |> get ?headers
   | _ ->
     Lwt.fail_with
       ("Unexpected response: got '"
@@ -108,7 +110,11 @@ let bib_of_doi doi =
   let headers =
     Cohttp.Header.of_list [ "Accept", "application/x-bibtex"; "charset", "utf-8" ]
   in
-  get ~headers uri
+  let fallback =
+    Uri.of_string
+      ("https://crosscite.org/citeproc/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US")
+  in
+  get ~headers ~fallback uri
 
 
 let bib_of_arxiv arxiv =
