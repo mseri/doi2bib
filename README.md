@@ -21,21 +21,23 @@ Usage:
 
 It will output the bibtex entry, using the published details when possible.
 
-Examples:
+Examples of use (the bibtex entry is printed on standard output):
 
-    doi2bib 10.1007/s10569-019-9946-9
-    doi2bib doi:10.4171/JST/226
-    doi2bib arXiv:1609.01724
-    doi2bib 1902.00436
+    $ doi2bib 10.1007/s10569-019-9946-9
+    $ doi2bib doi:10.4171/JST/226
+    $ doi2bib arXiv:1609.01724
+    $ doi2bib 1902.00436
 
 Each release comes with attached binaries for windows, mac and linux.
-A statically built linux binary is in the works, hopefully available soon.
+If you want to build the package yourself, the most immediate way is by running
 
-To run the tests
+    $ opam pin add doi2bib https://github.com/mseri/doi2bib.git
+    $ opam install doi2bib
 
-    opam install --deps-only .
-    dune build -p doi2bib
-    dune runtest -p doi2bib
+To run the tests, clone this repository and from of the root of the project run
+
+    $ opam install --deps-only .    # first time only
+    $ dune runtest -p doi2bib
 
 API references:
 
