@@ -90,12 +90,15 @@ let rec get ?headers ?fallback uri =
     Lwt.return body
   | 302 ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
-    (match uri' with
-    | Some uri -> get ?headers uri
-    | None ->
+    (match uri', fallback with
+    | Some uri, _ -> get ?headers ?fallback uri
+    | None, Some uri -> get ?headers uri
+    | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = 404 || d = 504) && Option.is_some fallback ->
-    fallback |> Option.value ~default:(assert false) |> get ?headers
+    (match fallback with
+    | Some uri -> get ?headers uri
+    | None -> assert false)
   | _ ->
     Lwt.fail_with
       ("Unexpected response: got '"
