@@ -1,16 +1,18 @@
 type id =
   | DOI of string
   | ArXiv of string
+  | PubMed of string
 
 let parse_args () =
-  Clap.description "A little CLI tool to get the bibtex entry for a given DOI or arXivID.";
+  Clap.description "A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed ID.";
   let id =
     Clap.mandatory_string
       ~last:true
       ~description:
-        "A DOI or an arXiv ID. The tool tries to automatically infer what kind of ID you \
-         are using. You can force the cli to lookup a DOI by using the form 'doi:ID' or \
-         an arXiv ID by using the form 'arXiv:ID'."
+        "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer \
+        what kind of ID you are using. You can force the cli to lookup a DOI \
+        by using the form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
+        PubMed IDs always start with 'PMC'."
       ~placeholder:"ID"
       ()
   in
@@ -26,14 +28,15 @@ let parse_id id =
   match id with
   | doi when is_prefix "doi:" doi -> DOI (sub 4 doi)
   | arxiv when is_prefix "arxiv:" arxiv -> ArXiv (sub 6 arxiv)
+  | pubmed when is_prefix "pmc" pubmed -> PubMed pubmed
   | doi when contains '/' doi -> DOI (String.trim doi)
   | arxiv when contains '.' arxiv -> ArXiv (String.trim arxiv)
   | _ ->
     failwith
       ("Unable to parse ID: '"
       ^ id
-      ^ "'. You can force me to consider it by prepending 'doi:' or 'arxiv:' as \
-         appropriate.")
+      ^ "'. You can force me to consider it by prepending 'doi:', 'arxiv:' \
+         or 'PMC' as appropriate.")
 
 
 let parse_atom id atom =
@@ -136,9 +139,27 @@ let bib_of_arxiv arxiv =
   | Ezxmlm.Tag_not_found _ -> parse_atom arxiv atom_blob |> Lwt.return
 
 
+let bib_of_pubmed pubmed =
+  let uri =
+    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ String.trim pubmed
+    |> Uri.of_string
+  in
+  let open Lwt.Syntax in
+  let* body = get uri in
+  let _, xml_blob = Ezxmlm.from_string body in
+  let doi = ref "" in
+  let _ = Ezxmlm.filter_map
+            ~tag:"record"
+            ~f:(fun attrs node -> doi := Ezxmlm.get_attr "doi" attrs; node)
+            xml_blob
+  in ();
+  bib_of_doi !doi
+
+
 let get_bib_entry = function
   | DOI doi -> bib_of_doi doi
   | ArXiv arxiv -> bib_of_arxiv arxiv
+  | PubMed pubmed -> bib_of_pubmed pubmed
 
 
 let () =
