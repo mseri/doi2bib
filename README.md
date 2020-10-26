@@ -27,6 +27,7 @@ Examples of use (the bibtex entry is printed on standard output):
     $ doi2bib doi:10.4171/JST/226
     $ doi2bib arXiv:1609.01724
     $ doi2bib 1902.00436
+    $ doi2bib PMC2883744
 
 Each release comes with attached binaries for windows, mac and linux.
 If you want to build the package yourself, the most immediate way is by running
