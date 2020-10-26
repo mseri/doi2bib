@@ -3,6 +3,16 @@ type id =
   | ArXiv of string
   | PubMed of string
 
+exception Parse_error of string
+exception Entry_not_found
+exception PubMed_DOI_not_found
+
+let string_of_id = function
+  | DOI s -> "DOI ID '" ^ s ^ "'"
+  | ArXiv s -> "arXiv ID '" ^ s ^ "'"
+  | PubMed s -> "PubMed ID '" ^ s ^ "'"
+
+
 let parse_args () =
   Clap.description
     "A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed ID.";
@@ -32,43 +42,39 @@ let parse_id id =
   | pubmed when is_prefix "pmc" pubmed -> PubMed pubmed
   | doi when contains '/' doi -> DOI (String.trim doi)
   | arxiv when contains '.' arxiv -> ArXiv (String.trim arxiv)
-  | _ ->
-    failwith
-      ("Unable to parse ID: '"
-      ^ id
-      ^ "'. You can force me to consider it by prepending 'doi:', 'arxiv:' or 'PMC' as \
-         appropriate.")
+  | _ -> raise (Parse_error id)
 
 
 let parse_atom id atom =
-  let open Ezxmlm in
-  let entry = atom |> member "feed" |> member "entry" in
-  let title = entry |> member "title" |> to_string in
-  let authors =
-    entry
-    |> members "author"
-    |> List.map (fun n -> member "name" n |> to_string)
-    |> String.concat " and "
-  in
-  let year =
-    try entry |> member "updated" |> to_string |> fun s -> String.sub s 0 4 with
-    | Tag_not_found _ ->
-      entry |> member "published" |> to_string |> fun s -> String.sub s 0 4
-  in
-  let cat =
-    entry |> member_with_attr "primary_category" |> fun (a, _) -> get_attr "term" a
-  in
-  let bibid =
-    let open Astring in
-    (match String.cuts ~empty:false ~sep:" " authors with
-    | _ :: s :: _ -> s
-    | s :: _ -> s
-    | [] -> "")
-    ^ year
-    ^ (String.cut ~sep:" " title |> Option.map fst |> Option.value ~default:"")
-  in
-  Printf.sprintf
-    {|@misc{%s,
+  let bibentry () =
+    let open Ezxmlm in
+    let entry = atom |> member "feed" |> member "entry" in
+    let title = entry |> member "title" |> to_string in
+    let authors =
+      entry
+      |> members "author"
+      |> List.map (fun n -> member "name" n |> to_string)
+      |> String.concat " and "
+    in
+    let year =
+      try entry |> member "updated" |> to_string |> fun s -> String.sub s 0 4 with
+      | Tag_not_found _ ->
+        entry |> member "published" |> to_string |> fun s -> String.sub s 0 4
+    in
+    let cat =
+      entry |> member_with_attr "primary_category" |> fun (a, _) -> get_attr "term" a
+    in
+    let bibid =
+      let open Astring in
+      (match String.cuts ~empty:false ~sep:" " authors with
+      | _ :: s :: _ -> s
+      | s :: _ -> s
+      | [] -> "")
+      ^ year
+      ^ (String.cut ~sep:" " title |> Option.map fst |> Option.value ~default:"")
+    in
+    Printf.sprintf
+      {|@misc{%s,
       title={%s}, 
       author={%s},
       year={%s},
@@ -76,12 +82,17 @@ let parse_atom id atom =
       archivePrefix={arXiv},
       primaryClass={%s}
 }|}
-    bibid
-    title
-    authors
-    year
-    id
-    cat
+      bibid
+      title
+      authors
+      year
+      id
+      cat
+  in
+  try bibentry () with
+  | Ezxmlm.Tag_not_found t ->
+    raise
+    @@ Failure ("Unexpected error parsing arXiv's metadata, tag '" ^ t ^ "' not present.")
 
 
 let rec get ?headers ?fallback uri =
@@ -103,9 +114,10 @@ let rec get ?headers ?fallback uri =
     (match fallback with
     | Some uri -> get ?headers uri
     | None -> assert false)
+  | 400 | 404 -> Lwt.fail Entry_not_found
   | _ ->
     Lwt.fail_with
-      ("Unexpected response: got '"
+      ("Response error: got '"
       ^ string_of_int code
       ^ "' trying to access '"
       ^ Uri.to_string uri
@@ -141,24 +153,38 @@ let bib_of_arxiv arxiv =
 
 
 let bib_of_pubmed pubmed =
+  let pubmed = String.trim pubmed in
   let uri =
-    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ String.trim pubmed
-    |> Uri.of_string
+    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ pubmed |> Uri.of_string
   in
   let open Lwt.Syntax in
   let* body = get uri in
   let _, xml_blob = Ezxmlm.from_string body in
-  let doi = ref "" in
-  let _ =
-    Ezxmlm.filter_map
-      ~tag:"record"
-      ~f:(fun attrs node ->
-        doi := Ezxmlm.get_attr "doi" attrs;
-        node)
-      xml_blob
-  in
-  ();
-  bib_of_doi !doi
+  try
+    let doi = ref "" in
+    let _ =
+      Ezxmlm.filter_map
+        ~tag:"record"
+        ~f:(fun attrs node ->
+          doi := Ezxmlm.get_attr "doi" attrs;
+          node)
+        xml_blob
+    in
+    bib_of_doi !doi
+  with
+  | Not_found ->
+    let exn =
+      match
+        Ezxmlm.(
+          member "pmcids" xml_blob
+          |> member_with_attr "record"
+          |> fun (a, _) -> mem_attr "status" "error" a)
+      with
+      | true -> Entry_not_found
+      | false -> PubMed_DOI_not_found
+      | exception Ezxmlm.(Tag_not_found _) -> Entry_not_found
+    in
+    Lwt.fail exn
 
 
 let get_bib_entry = function
@@ -167,9 +193,28 @@ let get_bib_entry = function
   | PubMed pubmed -> bib_of_pubmed pubmed
 
 
+let main id =
+  match Lwt_main.run (get_bib_entry id) with
+  | bibtex -> Printf.printf "%s" bibtex
+  | exception PubMed_DOI_not_found ->
+    Printf.eprintf "Error: unable to find a DOI entry for %s.\n" (string_of_id id);
+    exit 2
+  | exception Entry_not_found ->
+    Printf.eprintf
+      "Error: unable to find any bibtex entry for %s. Recheck the ID before trying again.\n"
+      (string_of_id id);
+    exit 3
+  | exception Failure s ->
+    Printf.eprintf "Unexpected error. %s\n" s;
+    exit 4
+
+
 let () =
-  let id = parse_args () |> parse_id in
-  let open Lwt.Syntax in
-  Lwt_main.run
-    (let* bibtex = get_bib_entry id in
-     Lwt_io.printf "%s" bibtex)
+  match parse_args () |> parse_id with
+  | id -> main id
+  | exception Parse_error id ->
+    Printf.eprintf
+      "Error: unable to parse ID: '%s'. You can force me to consider it by prepending \
+       'doi:', 'arxiv:' or 'PMC' as appropriate."
+      id;
+    exit 1
