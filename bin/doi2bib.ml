@@ -4,15 +4,16 @@ type id =
   | PubMed of string
 
 let parse_args () =
-  Clap.description "A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed ID.";
+  Clap.description
+    "A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed ID.";
   let id =
     Clap.mandatory_string
       ~last:true
       ~description:
-        "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer \
-        what kind of ID you are using. You can force the cli to lookup a DOI \
-        by using the form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
-        PubMed IDs always start with 'PMC'."
+        "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer what \
+         kind of ID you are using. You can force the cli to lookup a DOI by using the \
+         form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.\n\
+         PubMed IDs always start with 'PMC'."
       ~placeholder:"ID"
       ()
   in
@@ -35,8 +36,8 @@ let parse_id id =
     failwith
       ("Unable to parse ID: '"
       ^ id
-      ^ "'. You can force me to consider it by prepending 'doi:', 'arxiv:' \
-         or 'PMC' as appropriate.")
+      ^ "'. You can force me to consider it by prepending 'doi:', 'arxiv:' or 'PMC' as \
+         appropriate.")
 
 
 let parse_atom id atom =
@@ -148,11 +149,15 @@ let bib_of_pubmed pubmed =
   let* body = get uri in
   let _, xml_blob = Ezxmlm.from_string body in
   let doi = ref "" in
-  let _ = Ezxmlm.filter_map
-            ~tag:"record"
-            ~f:(fun attrs node -> doi := Ezxmlm.get_attr "doi" attrs; node)
-            xml_blob
-  in ();
+  let _ =
+    Ezxmlm.filter_map
+      ~tag:"record"
+      ~f:(fun attrs node ->
+        doi := Ezxmlm.get_attr "doi" attrs;
+        node)
+      xml_blob
+  in
+  ();
   bib_of_doi !doi
 
 
