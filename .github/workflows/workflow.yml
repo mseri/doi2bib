@@ -107,11 +107,11 @@ jobs:
         run: opam exec -- dune runtest -p doi2bib
 
       - name: Create release archive
-        if: ${{ success() }}
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         run: opam exec -- tar czf release.tar.gz -C _build/default/bin/ doi2bib.exe
       
       - name: Upload build artifact
-        if: ${{ success() }}
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v2
         with:
           path: release.tar.gz
@@ -155,13 +155,14 @@ jobs:
             "dependencies": {
               "ocaml": "${{ matrix.ocaml-version }}",
               "doi2bib": "./doi2bib.opam",
-              "generate": "github:EduardoRFS/reason-mobile:generate.json#f657188a0f4b18a98f438edca358b1707582b2f2"
+              "generate": "github:EduardoRFS/reason-mobile:generate.json#343150aa5413f3c0eb23046cec9daca13b4c9564"
             },
             "resolutions": {
               "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
               "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#c62b045106fafa407874053bdd79273a8f591352",
               "@opam/num": "github:dune-universe/num:num.opam#bdb2d7653e927e142b701b51d89f393471279713",
-              "@opam/cstruct-sexp": "5.2.0"            }
+              "@opam/cstruct-sexp": "5.2.0"
+            }
           }' > esy.json
 
       - uses: actions/setup-node@v1
@@ -192,7 +193,7 @@ jobs:
         run: esy @linux.musl.${{ matrix.arch }} -p @_linux.musl.${{ matrix.arch }}/doi2bib sh -c 'tar czf release.tar.gz -C $cur__target_dir/_build/default.linux.musl.${{ matrix.arch }}/bin doi2bib.exe'
       
       - name: Upload build artifact
-        if: ${{ success() }}
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v2
         with:
           path: release.tar.gz
