@@ -10,14 +10,17 @@ Usage:
 
     DESCRIPTION
 
-        A little CLI tool to get the bibtex entry for a given DOI or arXivID.
+        A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed
+        ID.
 
     OPTIONS
 
         ID
-            A DOI or an arXiv ID. The tool tries to automatically infer what kind of
-            ID you are using. You can force the cli to lookup a DOI by using the
-            form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
+            A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer
+            what kind of ID you are using. You can force the cli to lookup a DOI by
+            using the form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
+            PubMed IDs always start with 'PMC'.
+    
 
 It will output the bibtex entry, using the published details when possible.
 
