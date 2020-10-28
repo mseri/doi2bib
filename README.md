@@ -1,5 +1,5 @@
 # doi2bib ![Build status](https://github.com/mseri/doi2bib/workflows/Main%20workflow/badge.svg)
-Small CLI to get a bibtex entry from a DOI or an arXiv ID.
+Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID.
 
 Usage:
 
