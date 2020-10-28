@@ -12,7 +12,7 @@
 
 (package
  (name doi2bib)
- (synopsis "Little CLI tool to get bibtex entries out of doi or arxiv ids")
+ (synopsis "Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID")
  (depends
   (ocaml (>= 4.08))
   (astring (>= 0.8.0))
