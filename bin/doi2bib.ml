@@ -6,6 +6,7 @@ type id =
 exception Parse_error of string
 exception Entry_not_found
 exception PubMed_DOI_not_found
+exception Bad_gateway
 
 let string_of_id = function
   | DOI s -> "DOI ID '" ^ s ^ "'"
@@ -115,6 +116,7 @@ let rec get ?headers ?fallback uri =
     | Some uri -> get ?headers uri
     | None -> assert false)
   | 400 | 404 -> Lwt.fail Entry_not_found
+  | 502 -> Lwt.fail Bad_gateway
   | _ ->
     Lwt.fail_with
       ("Response error: got '"
@@ -207,6 +209,11 @@ let main id =
   | exception Failure s ->
     Printf.eprintf "Unexpected error. %s\n" s;
     exit 4
+  | exception Bad_gateway ->
+    Printf.eprintf
+      "Remote server error: wait some time and try again, this error tends to happen \
+       when the remote servers are busy.";
+    exit 5
 
 
 let () =
