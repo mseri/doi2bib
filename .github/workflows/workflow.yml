@@ -80,13 +80,13 @@ jobs:
       
       - name: Define env (unix)
         if: ${{ runner.os != 'Windows' }}
-        run: echo "::set-env name=GITHUB_TAG::${GITHUB_REF#refs/*/}"
+        run: echo "GITHUB_TAG=$(git describe --always)" >> $GITHUB_ENV
       
       - name: Define env (windows)
         if: ${{ runner.os == 'Windows' }}
         run: |
-          $tag = "${{github.ref}}".Split("/")["${{github.ref}}".Split("/").Length -1]
-          echo "::set-env name=GITHUB_TAG::$(echo $tag)"
+          echo "GITHUB_TAG=$(git describe --always)" >> $GITHUB_ENV
+          echo "CARAMELC_STDLIB_PATH=${{ matrix.stdlib_path }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
@@ -147,6 +147,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
+      - name: Set git user
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions-bot@users.noreply.github.com
+      
+      - name: Define env
+        run: echo "GITHUB_TAG=$(git describe --always)" >> $GITHUB_ENV
 
       - name: Create esy wrapper
         run: |
