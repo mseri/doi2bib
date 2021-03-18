@@ -1,6 +1,5 @@
 (lang dune 2.7)
 (name doi2bib)
-(version 85cf81b-dirty)
 
 (cram enable)
 
