@@ -186,10 +186,7 @@ let doi2bib id =
     (match Lwt_main.run (get_bib_entry @@ parse_id id) with
     | bibtex -> `Ok (Printf.printf "%s" bibtex)
     | exception PubMed_DOI_not_found ->
-      err
-      @@ Printf.sprintf
-           "Error: unable to find a DOI entry for %s.\n"
-           id
+      err @@ Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
     | exception Entry_not_found ->
       err
       @@ Printf.sprintf
