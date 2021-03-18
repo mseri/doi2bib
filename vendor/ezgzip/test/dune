@@ -1,0 +1,10 @@
+(executable
+ (name test)
+ (libraries alcotest ezgzip qcheck))
+
+(alias
+ (name runtest)
+ (deps
+  (:< test.exe))
+ (action
+  (run %{<} --color=always)))

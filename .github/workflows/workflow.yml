@@ -33,12 +33,12 @@ jobs:
           - ubuntu-18.04
           - windows-latest
         ocaml-version:
-          - 4.11.1
+          - 4.11.2
         include:
           - os: macos-latest
             suffix: x86_64-apple-darwin
           - os: ubuntu-18.04
-            ocaml-version: 4.11.1
+            ocaml-version: 4.11.2
             suffix: x86_64-unknown-linux-gnu
           - os: windows-latest
             suffix: x86_64-pc-windows-gnu
@@ -86,13 +86,11 @@ jobs:
         if: ${{ runner.os == 'Windows' }}
         run: |
           echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
-          echo "CARAMELC_STDLIB_PATH=${{ matrix.stdlib_path }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
-          opam depext tls
-          opam install tls
-          opam install astring cmdliner cohttp-lwt-unix ezxmlm lwt_ppx
+          opam depext doi2bib
+          opam install -t --deps-only doi2bib
 
       - name: Build project
         run: opam exec -- dune build -p doi2bib
@@ -133,7 +131,7 @@ jobs:
   cross_compile:
     name: Musl cross compilation build
 
-    needs: [create_draft_release, build]
+    needs: [create_draft_release]
 
     strategy:
       fail-fast: false

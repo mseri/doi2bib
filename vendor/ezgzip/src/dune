@@ -1,0 +1,4 @@
+(library
+ (name ezgzip)
+ (public_name ezgzip)
+ (libraries astring ocplib-endian rresult zip))

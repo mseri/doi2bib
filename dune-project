@@ -19,5 +19,6 @@
   (cohttp-lwt-unix (>= 2.5.0))
   (cmdliner (>= 1.0.0))
   (ezxmlm (>= 1.1.0))
+  ;(ezgzip (>= 0.2.0))
   (tls (>= 0.12.0))
  ))

@@ -7,6 +7,18 @@ exception Parse_error of string
 exception Entry_not_found
 exception PubMed_DOI_not_found
 exception Bad_gateway
+exception GzipError of [ `Gzip of Ezgzip.error ]
+
+let gzip_h = Cohttp.Header.of_list [ "accept-encoding", "gzip" ]
+
+let extract is_gzipped body =
+  if is_gzipped
+  then (
+    match Ezgzip.decompress body with
+    | Ok content -> content
+    | Error error -> raise (GzipError error))
+  else body
+
 
 let string_of_id = function
   | DOI s -> "DOI ID '" ^ s ^ "'"
@@ -79,6 +91,11 @@ let parse_atom id atom =
 
 
 let rec get ?headers ?fallback uri =
+  let headers =
+    match headers with
+    | None -> Some gzip_h
+    | Some h -> Some (Cohttp.Header.add_unless_exists h "accept-encoding" "gzip")
+  in
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
   let status = Cohttp_lwt.Response.status resp in
@@ -86,12 +103,20 @@ let rec get ?headers ?fallback uri =
   match status with
   | `OK ->
     let* body = Cohttp_lwt.Body.to_string body in
-    Lwt.return body
-  | `Found ->
+    let is_gzipped : bool =
+      Cohttp_lwt.Response.headers resp
+      |> fun resp -> Cohttp.Header.get resp "content-encoding" = Some "gzip"
+    in
+    (try Lwt.return @@ extract is_gzipped body with
+    | GzipError error ->
+      Lwt.fail @@ Failure Format.(asprintf "%a" Ezgzip.pp_gzip_error error))
+  | `Moved_permanently | `Found | `Temporary_redirect | `Permanent_redirect ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
-    | Some uri, _ -> get ?headers ?fallback uri
-    | None, Some uri -> get ?headers uri
+    | Some uri, _ ->
+      get ?headers ?fallback uri
+    | None, Some uri ->
+      get ?headers uri
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = `Not_found || d = `Gateway_timeout) && Option.is_some fallback ->
