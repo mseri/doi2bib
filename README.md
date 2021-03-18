@@ -3,23 +3,40 @@ Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID.
 
 Usage:
 
-    $ doi2bib --help
+    $ doi2bib --help=plain
+    NAME
+       doi2bib - A little CLI tool to get the bibtex entry for a given DOI,
+       arXiv or PubMed ID.
+
     SYNOPSIS
+        doi2bib [OPTION]... [ID]
 
-        doi2bib <ID>
-
-    DESCRIPTION
-
-        A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed
-        ID.
+    ARGUMENTS
+        ID  A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically
+            infer what kind of ID you are using. You can force the cli to
+            lookup a DOI by using the form 'doi:ID' or an arXiv ID by using
+            the form 'arXiv:ID'. PubMed IDs always start with 'PMC'.
 
     OPTIONS
+        --help[=FMT] (default=auto)
+            Show this help in format FMT. The value FMT must be one of `auto',
+            `pager', `groff' or `plain'. With `auto', the format is `pager` or
+            `plain' whenever the TERM env var is `dumb' or undefined.
 
-        ID
-            A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer
-            what kind of ID you are using. You can force the cli to lookup a DOI by
-            using the form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.
-            PubMed IDs always start with 'PMC'.
+        --version
+            Show version information.
+
+    EXIT STATUS
+        doi2bib exits with the following status:
+
+        0   on success.
+
+        124 on command line parsing errors.
+
+        125 on unexpected internal errors (bugs).
+
+    BUGS
+        Report bugs to https://github.com/mseri/doi2bib/issues
     
 
 It will output the bibtex entry, using the published details when possible.

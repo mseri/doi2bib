@@ -17,7 +17,7 @@
   (ocaml (>= 4.08))
   (astring (>= 0.8.0))
   (cohttp-lwt-unix (>= 2.5.0))
-  (clap (>= 0.1.0))
+  (cmdliner (>= 1.0.0))
   (ezxmlm (>= 1.1.0))
   (tls (>= 0.12.0))
  ))

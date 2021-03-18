@@ -163,13 +163,15 @@ jobs:
             "dependencies": {
               "ocaml": "${{ matrix.ocaml-version }}",
               "doi2bib": "./doi2bib.opam",
-              "generate": "github:EduardoRFS/reason-mobile:generate.json#343150aa5413f3c0eb23046cec9daca13b4c9564"
+              "generate": "github:EduardoRFS/reason-mobile:generate.json#859a7ddd5728342a96cbaae584da22863a023f68"
             },
             "resolutions": {
               "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
               "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#c62b045106fafa407874053bdd79273a8f591352",
               "@opam/num": "github:dune-universe/num:num.opam#bdb2d7653e927e142b701b51d89f393471279713",
-              "@opam/cstruct-sexp": "5.2.0"
+              "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#4fc08affe26642b6285cedc1d2ca7ec03127caf3",
+              "@opam/cstruct-sexp": "5.2.0",
+              "@opam/ocamlfind": "1.8.1"
             }
           }' > esy.json
 

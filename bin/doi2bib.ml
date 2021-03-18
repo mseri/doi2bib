@@ -14,24 +14,6 @@ let string_of_id = function
   | PubMed s -> "PubMed ID '" ^ s ^ "'"
 
 
-let parse_args () =
-  Clap.description
-    "A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed ID.";
-  let id =
-    Clap.mandatory_string
-      ~last:true
-      ~description:
-        "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer what \
-         kind of ID you are using. You can force the cli to lookup a DOI by using the \
-         form 'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.\n\
-         PubMed IDs always start with 'PMC'."
-      ~placeholder:"ID"
-      ()
-  in
-  Clap.close ();
-  id
-
-
 let parse_id id =
   let open Astring in
   let is_prefix affix s = String.is_prefix ~affix (String.Ascii.lowercase s) in
@@ -195,33 +177,56 @@ let get_bib_entry = function
   | PubMed pubmed -> bib_of_pubmed pubmed
 
 
-let main id =
-  match Lwt_main.run (get_bib_entry id) with
-  | bibtex -> Printf.printf "%s" bibtex
-  | exception PubMed_DOI_not_found ->
-    Printf.eprintf "Error: unable to find a DOI entry for %s.\n" (string_of_id id);
-    exit 2
-  | exception Entry_not_found ->
-    Printf.eprintf
-      "Error: unable to find any bibtex entry for %s. Recheck the ID before trying again.\n"
-      (string_of_id id);
-    exit 3
-  | exception Failure s ->
-    Printf.eprintf "Unexpected error. %s\n" s;
-    exit 4
-  | exception Bad_gateway ->
-    Printf.eprintf
-      "Remote server error: wait some time and try again, this error tends to happen \
-       when the remote servers are busy.";
-    exit 5
+let err s = `Error (false, s)
+
+let doi2bib id =
+  match id with
+  | None -> `Help (`Pager, None)
+  | Some id ->
+    (match Lwt_main.run (get_bib_entry @@ parse_id id) with
+    | bibtex -> `Ok (Printf.printf "%s" bibtex)
+    | exception PubMed_DOI_not_found ->
+      err @@ Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
+    | exception Entry_not_found ->
+      err
+      @@ Printf.sprintf
+           "Error: unable to find any bibtex entry for %s.\n\
+            Check the ID before trying again.\n"
+           id
+    | exception Failure s -> err @@ Printf.sprintf "Unexpected error. %s\n" s
+    | exception Bad_gateway ->
+      err
+      @@ Printf.sprintf
+           "Remote server error: wait some time and try again.\n\
+            This error tends to happen when the remote servers are busy."
+    | exception Parse_error id ->
+      err
+      @@ Printf.sprintf
+           "Error: unable to parse ID: '%s'.\n\
+            You can force me to consider it by prepending 'doi:', 'arxiv:' or 'PMC' as \
+            appropriate."
+           id)
 
 
 let () =
-  match parse_args () |> parse_id with
-  | id -> main id
-  | exception Parse_error id ->
-    Printf.eprintf
-      "Error: unable to parse ID: '%s'. You can force me to consider it by prepending \
-       'doi:', 'arxiv:' or 'PMC' as appropriate."
-      id;
-    exit 1
+  let open Cmdliner in
+  let id =
+    let doc =
+      "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically infer what \
+       kind of ID you are using. You can force the cli to lookup a DOI by using the form \
+       'doi:ID' or an arXiv ID by using the form 'arXiv:ID'.\n\
+       PubMed IDs always start with 'PMC'."
+    in
+    Arg.(value & pos 0 (some string) None & info ~docv:"ID" ~doc [])
+  in
+  let doi2bib_t = Term.(ret (const doi2bib $ id)) in
+  let info =
+    let doc =
+      "A little CLI tool to get the bibtex entry for a given DOI, arXiv or PubMed ID."
+    in
+    let man =
+      [ `S Manpage.s_bugs; `P "Report bugs to https://github.com/mseri/doi2bib/issues" ]
+    in
+    Term.info "doi2bib" ~version:"%‌%VERSION%%" ~doc ~exits:Term.default_exits ~man
+  in
+  Term.exit @@ Term.eval (doi2bib_t, info)
