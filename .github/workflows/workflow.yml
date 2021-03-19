@@ -171,7 +171,10 @@ jobs:
               "@opam/num": "github:dune-universe/num:num.opam#bdb2d7653e927e142b701b51d89f393471279713",
               "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#4fc08affe26642b6285cedc1d2ca7ec03127caf3",
               "@opam/cstruct-sexp": "5.2.0",
-              "@opam/ocamlfind": "1.8.1"
+              "@opam/ocamlfind": "1.8.1",
+              "@opam/conduit": "2.2.2",
+              "@opam/conduit-lwt": "2.2.2",
+              "@opam/conduit-lwt-unix": "2.2.2"
             }
           }' > esy.json
 
