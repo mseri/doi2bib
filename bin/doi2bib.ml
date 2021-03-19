@@ -227,6 +227,6 @@ let () =
     let man =
       [ `S Manpage.s_bugs; `P "Report bugs to https://github.com/mseri/doi2bib/issues" ]
     in
-    Term.info "doi2bib" ~version:"%‌%VERSION%%" ~doc ~exits:Term.default_exits ~man
+    Term.info "doi2bib" ~version:"%%VERSION%%" ~doc ~exits:Term.default_exits ~man
   in
   Term.exit @@ Term.eval (doi2bib_t, info)
