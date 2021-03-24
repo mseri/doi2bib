@@ -92,7 +92,7 @@ jobs:
         run: |
           opam depext tls
           opam install tls
-          opam install astring clap cohttp-lwt-unix ezxmlm lwt_ppx
+          opam install astring cmdliner cohttp-lwt-unix ezxmlm lwt_ppx
 
       - name: Build project
         run: opam exec -- dune build -p doi2bib
@@ -183,7 +183,7 @@ jobs:
           node-version: 14
 
       - name: Install esy
-        run: npm install -g esy
+        run: npm install -g esy@0.6.7
 
       - name: Create cross compile toolchain lock
         run: esy solve
