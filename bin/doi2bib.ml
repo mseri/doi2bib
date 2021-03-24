@@ -87,6 +87,7 @@ let rec get ?headers ?fallback uri =
     let* body = Cohttp_lwt.Body.to_string body in
     Lwt.return body
   | 302 ->
+    let* () = Cohttp_lwt.Body.drain_body body in
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
     | Some uri, _ -> get ?headers ?fallback uri
@@ -94,11 +95,16 @@ let rec get ?headers ?fallback uri =
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = 404 || d = 504) && Option.is_some fallback ->
-    (match fallback with
+    (let* () = Cohttp_lwt.Body.drain_body body in
+     match fallback with
     | Some uri -> get ?headers uri
     | None -> assert false)
-  | 400 | 404 -> Lwt.fail Entry_not_found
-  | 502 -> Lwt.fail Bad_gateway
+  | 400 | 404 ->
+    let* () = Cohttp_lwt.Body.drain_body body in
+    Lwt.fail Entry_not_found
+  | 502 ->
+    let* () = Cohttp_lwt.Body.drain_body body in
+    Lwt.fail Bad_gateway
   | _ ->
     Lwt.fail_with
       ("Response error: got '"
