@@ -113,10 +113,8 @@ let rec get ?headers ?fallback uri =
   | `Moved_permanently | `Found | `Temporary_redirect | `Permanent_redirect ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
-    | Some uri, _ ->
-      get ?headers ?fallback uri
-    | None, Some uri ->
-      get ?headers uri
+    | Some uri, _ -> get ?headers ?fallback uri
+    | None, Some uri -> get ?headers uri
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = `Not_found || d = `Gateway_timeout) && Option.is_some fallback ->
