@@ -95,8 +95,8 @@ let rec get ?headers ?fallback uri =
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = 404 || d = 504) && Option.is_some fallback ->
-    (let* () = Cohttp_lwt.Body.drain_body body in
-     match fallback with
+    let* () = Cohttp_lwt.Body.drain_body body in
+    (match fallback with
     | Some uri -> get ?headers uri
     | None -> assert false)
   | 400 | 404 ->
