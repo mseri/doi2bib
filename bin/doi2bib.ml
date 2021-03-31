@@ -82,8 +82,7 @@ let rec get ?headers ?fallback uri =
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
   let code = Cohttp_lwt.(resp |> Response.status |> Cohttp.Code.code_of_status) in
-  if code <> 200 then 
-    Lwt.ignore_result (Cohttp_lwt.Body.drain_body body);
+  if code <> 200 then Lwt.ignore_result (Cohttp_lwt.Body.drain_body body);
   match code with
   | 200 ->
     let* body = Cohttp_lwt.Body.to_string body in
@@ -99,10 +98,8 @@ let rec get ?headers ?fallback uri =
     (match fallback with
     | Some uri -> get ?headers uri
     | None -> assert false)
-  | 400 | 404 ->
-    Lwt.fail Entry_not_found
-  | 502 ->
-    Lwt.fail Bad_gateway
+  | 400 | 404 -> Lwt.fail Entry_not_found
+  | 502 -> Lwt.fail Bad_gateway
   | _ ->
     Lwt.fail_with
       ("Response error: got '"
