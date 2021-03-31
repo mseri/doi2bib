@@ -81,29 +81,29 @@ let parse_atom id atom =
 let rec get ?headers ?fallback uri =
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
-  let code = Cohttp_lwt.(resp |> Response.status |> Cohttp.Code.code_of_status) in
-  if code <> 200 then Lwt.ignore_result (Cohttp_lwt.Body.drain_body body);
-  match code with
-  | 200 ->
+  let status = Cohttp_lwt.Response.status resp in
+  if status <> `OK then Lwt.ignore_result (Cohttp_lwt.Body.drain_body body);
+  match status with
+  | `OK ->
     let* body = Cohttp_lwt.Body.to_string body in
     Lwt.return body
-  | 302 ->
+  | `Found ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
     | Some uri, _ -> get ?headers ?fallback uri
     | None, Some uri -> get ?headers uri
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
-  | d when (d = 404 || d = 504) && Option.is_some fallback ->
+  | d when (d = `Not_found || d = `Gateway_timeout) && Option.is_some fallback ->
     (match fallback with
     | Some uri -> get ?headers uri
     | None -> assert false)
-  | 400 | 404 -> Lwt.fail Entry_not_found
-  | 502 -> Lwt.fail Bad_gateway
+  | `Bad_request | `Not_found -> Lwt.fail Entry_not_found
+  | `Bad_gateway -> Lwt.fail Bad_gateway
   | _ ->
     Lwt.fail_with
-      ("Response error: got '"
-      ^ string_of_int code
+      ("Response error: '"
+      ^ Cohttp.Code.string_of_status status
       ^ "' trying to access '"
       ^ Uri.to_string uri
       ^ "'.")
