@@ -1,5 +1,5 @@
 (executable
  (name doi2bib)
  (public_name doi2bib)
- (libraries astring cmdliner cohttp-lwt-unix ezxmlm)
+ (libraries astring cmdliner cohttp-lwt-unix decompress.gz ezxmlm)
  (preprocess future_syntax))
