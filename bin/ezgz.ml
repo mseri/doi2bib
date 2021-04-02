@@ -45,8 +45,6 @@ let compress_string ?(level = 4) str =
 
 exception GzipError of string
 
-let gzip_h = Cohttp.Header.of_list [ "accept-encoding", "gzip" ]
-
 let extract is_gzipped body =
   if is_gzipped
   then (
@@ -54,3 +52,10 @@ let extract is_gzipped body =
     | Ok content -> content
     | Error (`Msg error) -> raise (GzipError error))
   else body
+
+
+let gzip_h =
+  let gzip_h = Cohttp.Header.of_list [ "accept-encoding", "gzip" ] in
+  function
+  | None -> Some gzip_h
+  | Some h -> Some (Cohttp.Header.add_unless_exists h "accept-encoding" "gzip")

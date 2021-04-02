@@ -79,11 +79,7 @@ let parse_atom id atom =
 
 
 let rec get ?headers ?fallback uri =
-  let headers =
-    match headers with
-    | None -> Some Ezgz.gzip_h
-    | Some h -> Some (Cohttp.Header.add_unless_exists h "accept-encoding" "gzip")
-  in
+  let headers = Ezgz.gzip_h headers in
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
   let status = Cohttp_lwt.Response.status resp in
@@ -97,8 +93,7 @@ let rec get ?headers ?fallback uri =
     in
     let open Ezgz in
     (try Lwt.return @@ extract is_gzipped body with
-    | GzipError error ->
-      Lwt.fail @@ Failure error)
+    | GzipError error -> Lwt.fail @@ Failure error)
   | `Found ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
