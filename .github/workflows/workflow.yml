@@ -90,8 +90,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          opam depext tls
-          opam install tls
+          opam depext tls decompress
+          opam install tls decompress
           opam install astring cmdliner cohttp-lwt-unix ezxmlm lwt_ppx
 
       - name: Build project
