@@ -4,9 +4,7 @@ type id =
   | PubMed of string
 
 exception Parse_error of string
-exception Entry_not_found
 exception PubMed_DOI_not_found
-exception Bad_gateway
 
 let string_of_id = function
   | DOI s -> "DOI ID '" ^ s ^ "'"
@@ -78,44 +76,6 @@ let parse_atom id atom =
     @@ Failure ("Unexpected error parsing arXiv's metadata, tag '" ^ t ^ "' not present.")
 
 
-let rec get ?headers ?fallback uri =
-  let headers = Ezgz.gzip_h headers in
-  let open Lwt.Syntax in
-  let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
-  let status = Cohttp_lwt.Response.status resp in
-  if status <> `OK then Lwt.ignore_result (Cohttp_lwt.Body.drain_body body);
-  match status with
-  | `OK ->
-    let* body = Cohttp_lwt.Body.to_string body in
-    let is_gzipped : bool =
-      Cohttp_lwt.Response.headers resp
-      |> fun resp -> Cohttp.Header.get resp "content-encoding" = Some "gzip"
-    in
-    let open Ezgz in
-    (try Lwt.return @@ extract is_gzipped body with
-    | GzipError error -> Lwt.fail @@ Failure error)
-  | `Found ->
-    let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
-    (match uri', fallback with
-    | Some uri, _ -> get ?headers ?fallback uri
-    | None, Some uri -> get ?headers uri
-    | None, None ->
-      Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
-  | d when (d = `Not_found || d = `Gateway_timeout) && Option.is_some fallback ->
-    (match fallback with
-    | Some uri -> get ?headers uri
-    | None -> assert false)
-  | `Bad_request | `Not_found -> Lwt.fail Entry_not_found
-  | `Bad_gateway -> Lwt.fail Bad_gateway
-  | _ ->
-    Lwt.fail_with
-      ("Response error: '"
-      ^ Cohttp.Code.string_of_status status
-      ^ "' trying to access '"
-      ^ Uri.to_string uri
-      ^ "'.")
-
-
 let bib_of_doi doi =
   let uri = "https://doi.org/" ^ String.trim doi |> Uri.of_string in
   let headers =
@@ -125,7 +85,7 @@ let bib_of_doi doi =
     Uri.of_string
       ("https://citation.crosscite.org/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US")
   in
-  get ~headers ~fallback uri
+  Http.get ~headers ~fallback uri
 
 
 let bib_of_arxiv arxiv =
@@ -133,7 +93,7 @@ let bib_of_arxiv arxiv =
     "https://export.arxiv.org/api/query?id_list=" ^ String.trim arxiv |> Uri.of_string
   in
   let open Lwt.Syntax in
-  let* body = get uri in
+  let* body = Http.get uri in
   let _, atom_blob = Ezxmlm.from_string body in
   try
     let doi =
@@ -150,7 +110,7 @@ let bib_of_pubmed pubmed =
     "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ pubmed |> Uri.of_string
   in
   let open Lwt.Syntax in
-  let* body = get uri in
+  let* body = Http.get uri in
   let _, xml_blob = Ezxmlm.from_string body in
   try
     let doi = ref "" in
@@ -172,9 +132,9 @@ let bib_of_pubmed pubmed =
           |> member_with_attr "record"
           |> fun (a, _) -> mem_attr "status" "error" a)
       with
-      | true -> Entry_not_found
+      | true -> Http.Entry_not_found
       | false -> PubMed_DOI_not_found
-      | exception Ezxmlm.(Tag_not_found _) -> Entry_not_found
+      | exception Ezxmlm.(Tag_not_found _) -> Http.Entry_not_found
     in
     Lwt.fail exn
 

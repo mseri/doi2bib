@@ -10,14 +10,14 @@ let doi2bib id =
     | bibtex -> `Ok (Printf.printf "%s" bibtex)
     | exception PubMed_DOI_not_found ->
       err @@ Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
-    | exception Entry_not_found ->
+    | exception Http.Entry_not_found ->
       err
       @@ Printf.sprintf
            "Error: unable to find any bibtex entry for %s.\n\
             Check the ID before trying again.\n"
            id
     | exception Failure s -> err @@ Printf.sprintf "Unexpected error. %s\n" s
-    | exception Bad_gateway ->
+    | exception Http.Bad_gateway ->
       err
       @@ Printf.sprintf
            "Remote server error: wait some time and try again.\n\
