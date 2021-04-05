@@ -86,7 +86,6 @@ jobs:
         if: ${{ runner.os == 'Windows' }}
         run: |
           echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
-          echo "CARAMELC_STDLIB_PATH=${{ matrix.stdlib_path }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
