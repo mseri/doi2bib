@@ -6,7 +6,7 @@ let rec get ?headers ?fallback uri =
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
   let status = Cohttp_lwt.Response.status resp in
-  if status <> `OK then Lwt.ignore_result (Cohttp_lwt.Body.drain_body body);
+  let* () = if status <> `OK then Cohttp_lwt.Body.drain_body body else Lwt.return_unit in
   match status with
   | `OK ->
     let* body = Cohttp_lwt.Body.to_string body in
