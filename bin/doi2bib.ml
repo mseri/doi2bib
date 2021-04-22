@@ -1,4 +1,4 @@
-open Lib
+open Doi2bib
 
 let err s = `Error (false, s)
 

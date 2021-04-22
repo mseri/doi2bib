@@ -77,20 +77,18 @@ let parse_atom id atom =
 
 
 let bib_of_doi doi =
-  let uri = "https://doi.org/" ^ String.trim doi |> Uri.of_string in
+  let uri = "https://doi.org/" ^ String.trim doi in
   let headers =
     Cohttp.Header.of_list [ "Accept", "application/x-bibtex"; "charset", "utf-8" ]
   in
-  let fallback =
-    Uri.of_string
-      ("https://citation.crosscite.org/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US")
+  let fallback = "https://citation.crosscite.org/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US"
   in
   Http.get ~headers ~fallback uri
 
 
 let bib_of_arxiv arxiv =
   let uri =
-    "https://export.arxiv.org/api/query?id_list=" ^ String.trim arxiv |> Uri.of_string
+    "https://export.arxiv.org/api/query?id_list=" ^ String.trim arxiv
   in
   let open Lwt.Syntax in
   let* body = Http.get uri in
@@ -107,7 +105,7 @@ let bib_of_arxiv arxiv =
 let bib_of_pubmed pubmed =
   let pubmed = String.trim pubmed in
   let uri =
-    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ pubmed |> Uri.of_string
+    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ pubmed
   in
   let open Lwt.Syntax in
   let* body = Http.get uri in

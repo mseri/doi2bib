@@ -1,7 +1,8 @@
 exception Entry_not_found
 exception Bad_gateway
 
-let rec get ?headers ?fallback uri =
+let rec get ?proxy ?headers ?fallback uri =
+  let uri = Option.value ~default:"" proxy ^ uri |> Uri.of_string in
   let headers = Ezgz.gzip_h headers in
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
@@ -20,13 +21,13 @@ let rec get ?headers ?fallback uri =
   | `Found ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
-    | Some uri, _ -> get ?headers ?fallback uri
-    | None, Some uri -> get ?headers uri
+    | Some uri, _ -> get ?proxy ?headers ?fallback (Uri.to_string uri)
+    | None, Some uri -> get ?proxy ?headers uri
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = `Not_found || d = `Gateway_timeout) && Option.is_some fallback ->
     (match fallback with
-    | Some uri -> get ?headers uri
+    | Some uri -> get ?proxy ?headers uri
     | None -> assert false)
   | `Bad_request | `Not_found -> Lwt.fail Entry_not_found
   | `Bad_gateway -> Lwt.fail Bad_gateway
