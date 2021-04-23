@@ -34,12 +34,24 @@ let onload _ =
   Lwt_js_events.(
     async (fun () ->
         clicks btn (fun _ _ ->
-            let id' = id##.value |> Js.to_string |> Parser.parse_id in
-            print_endline (id##.value |> Js.to_string);
+            let id' = id##.value |> Js.to_string |> String.trim in
+            print_endline @@ "Got id:" ^ id';
             let* bibtex =
               Lwt.catch
-                (fun () -> get_bib_entry ~proxy id')
-                (fun err -> Lwt.return @@ Printexc.to_string err)
+                (fun () ->
+                  let id' = Parser.parse_id id' in
+                  out##.innerHTML := Js.string "Please wait...";
+                  get_bib_entry ~proxy id')
+                (function
+                  | Parser.Parse_error _ ->
+                    Lwt.return
+                    @@ Printf.sprintf "Error: I am unable to parse the ID, '%s'" id'
+                  | err ->
+                    Lwt.return
+                    @@ Printf.sprintf
+                         "Error: %s.\n\
+                         \ These are often transient, try again in a few seconds."
+                         (Printexc.to_string err))
             in
             out##.innerHTML := Js.string bibtex;
             Lwt.return_unit)));
