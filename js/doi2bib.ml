@@ -2,7 +2,7 @@ open Js_of_ocaml
 open Js_of_ocaml_lwt
 module Html = Dom_html
 
-let proxy = "http://alloworigin.com/get?url="
+let proxy = "https://thingproxy.freeboard.io/fetch/"
 
 module Ezgz = struct
   exception GzipError of string
