@@ -4,7 +4,6 @@ type id =
   | PubMed of string
 
 exception Parse_error of string
-exception PubMed_DOI_not_found
 
 let string_of_id = function
   | DOI s -> "DOI ID '" ^ s ^ "'"
@@ -56,13 +55,13 @@ let parse_atom id atom =
     in
     Printf.sprintf
       {|@misc{%s,
-      title={%s}, 
-      author={%s},
-      year={%s},
-      eprint={%s},
-      archivePrefix={arXiv},
-      primaryClass={%s}
-}|}
+        title={%s}, 
+        author={%s},
+        year={%s},
+        eprint={%s},
+        archivePrefix={arXiv},
+        primaryClass={%s}
+  }|}
       bibid
       title
       authors
@@ -74,70 +73,3 @@ let parse_atom id atom =
   | Ezxmlm.Tag_not_found t ->
     raise
     @@ Failure ("Unexpected error parsing arXiv's metadata, tag '" ^ t ^ "' not present.")
-
-
-let bib_of_doi ?proxy doi =
-  let uri = "https://doi.org/" ^ String.trim doi in
-  let headers =
-    Cohttp.Header.of_list [ "Accept", "application/x-bibtex"; "charset", "utf-8" ]
-  in
-  let fallback = "https://citation.crosscite.org/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US"
-  in
-  Http.get ?proxy ~headers ~fallback uri
-
-
-let bib_of_arxiv ?proxy arxiv =
-  let uri =
-    "https://export.arxiv.org/api/query?id_list=" ^ String.trim arxiv
-  in
-  let open Lwt.Syntax in
-  let* body = Http.get ?proxy uri in
-  let _, atom_blob = Ezxmlm.from_string body in
-  try
-    let doi =
-      Ezxmlm.(atom_blob |> member "feed" |> member "entry" |> member "doi" |> to_string)
-    in
-    bib_of_doi ?proxy doi
-  with
-  | Ezxmlm.Tag_not_found _ -> parse_atom arxiv atom_blob |> Lwt.return
-
-
-let bib_of_pubmed ?proxy pubmed =
-  let pubmed = String.trim pubmed in
-  let uri =
-    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ pubmed
-  in
-  let open Lwt.Syntax in
-  let* body = Http.get ?proxy uri in
-  let _, xml_blob = Ezxmlm.from_string body in
-  try
-    let doi = ref "" in
-    let _ =
-      Ezxmlm.filter_map
-        ~tag:"record"
-        ~f:(fun attrs node ->
-          doi := Ezxmlm.get_attr "doi" attrs;
-          node)
-        xml_blob
-    in
-    bib_of_doi ?proxy !doi
-  with
-  | Not_found ->
-    let exn =
-      match
-        Ezxmlm.(
-          member "pmcids" xml_blob
-          |> member_with_attr "record"
-          |> fun (a, _) -> mem_attr "status" "error" a)
-      with
-      | true -> Http.Entry_not_found
-      | false -> PubMed_DOI_not_found
-      | exception Ezxmlm.(Tag_not_found _) -> Http.Entry_not_found
-    in
-    Lwt.fail exn
-
-
-let get_bib_entry ?proxy = function
-  | DOI doi -> bib_of_doi ?proxy doi
-  | ArXiv arxiv -> bib_of_arxiv ?proxy arxiv
-  | PubMed pubmed -> bib_of_pubmed ?proxy pubmed

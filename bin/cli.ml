@@ -1,4 +1,5 @@
 open Doi2bib
+module Http = Http.Make (Cohttp_lwt_unix.Client) (Ezgz)
 
 let err s = `Error (false, s)
 
@@ -6,9 +7,9 @@ let doi2bib id =
   match id with
   | None -> `Help (`Pager, None)
   | Some id ->
-    (match Lwt_main.run (get_bib_entry @@ parse_id id) with
+    (match Lwt_main.run (Http.get_bib_entry @@ Parser.parse_id id) with
     | bibtex -> `Ok (Printf.printf "%s" bibtex)
-    | exception PubMed_DOI_not_found ->
+    | exception Http.PubMed_DOI_not_found ->
       err @@ Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
     | exception Http.Entry_not_found ->
       err
@@ -22,7 +23,7 @@ let doi2bib id =
       @@ Printf.sprintf
            "Remote server error: wait some time and try again.\n\
             This error tends to happen when the remote servers are busy."
-    | exception Parse_error id ->
+    | exception Parser.Parse_error id ->
       err
       @@ Printf.sprintf
            "Error: unable to parse ID: '%s'.\n\

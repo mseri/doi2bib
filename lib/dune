@@ -1,4 +1,4 @@
 (library
  (name doi2bib)
- (libraries astring cohttp-lwt-unix decompress.gz ezxmlm)
+ (libraries astring cohttp-lwt decompress.gz ezxmlm)
  (preprocess future_syntax))
