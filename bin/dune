@@ -1,5 +1,5 @@
 (executable
  (name cli)
  (public_name doi2bib)
- (libraries cmdliner doi2bib cohttp-lwt-unix unix)
+ (libraries cmdliner doi2bib)
  (preprocess future_syntax))

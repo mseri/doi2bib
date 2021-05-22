@@ -19,8 +19,6 @@ let uncompress_string str =
   |> Result.map (fun _metadata -> Buffer.contents r)
 
 
-let time () = Int32.of_float (Unix.gettimeofday ())
-
 let compress_string ?(level = 4) str =
   let i = De.bigstring_create De.io_buffer_size in
   let o = De.bigstring_create De.io_buffer_size in
@@ -28,7 +26,10 @@ let compress_string ?(level = 4) str =
   let q = De.Queue.create 0x1000 in
   let r = Buffer.create 0x1000 in
   let p = ref 0 in
-  let cfg = Gz.Higher.configuration Gz.Unix time in
+  let cfg =
+    let time () = Int32.of_float (Unix.gettimeofday ()) in
+    Gz.Higher.configuration Gz.Unix time
+  in
   let refill buf =
     let len = min (String.length str - !p) De.io_buffer_size in
     Bigstringaf.blit_from_string str ~src_off:!p buf ~dst_off:0 ~len;
@@ -55,7 +56,8 @@ let extract is_gzipped body =
 
 
 let gzip_h =
-  let gzip_h = Cohttp.Header.of_list [ "accept-encoding", "gzip" ] in
+  let open Cohttp.Header in
+  let gzip_h = of_list [ "accept-encoding", "gzip" ] in
   function
   | None -> Some gzip_h
-  | Some h -> Some (Cohttp.Header.add_unless_exists h "accept-encoding" "gzip")
+  | Some h -> Some (add_unless_exists h "accept-encoding" "gzip")

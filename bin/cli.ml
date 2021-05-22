@@ -1,5 +1,4 @@
 open Doi2bib
-module Http = Http.Make (Cohttp_lwt_unix.Client) (Ezgz)
 
 let err s = `Error (false, s)
 
