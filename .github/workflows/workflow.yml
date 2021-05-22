@@ -52,23 +52,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Cached Infra
-        uses: actions/cache@v2
-        env:
-          cache-name: cached-opam
-        with:
-          path: |
-           ~/.opam
-           _build
-           C:\cygwin
-          key: ${{ matrix.os }}-${{ matrix.ocaml-version }}-${{ env.cache-name }}-${{ hashFiles('**/*.opam*') }}
-          restore-keys: |
-            ${{ matrix.os }}-${{ matrix.ocaml-version }}-${{ env.cache-name }}-
-            ${{ matrix.os }}-${{ matrix.ocaml-version }}-
-            ${{ matrix.os }}-
-
       - name: Use OCaml ${{ matrix.ocaml-version }}
-        uses: avsm/setup-ocaml@v1
+        uses: ocaml/setup-ocaml@v1
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
