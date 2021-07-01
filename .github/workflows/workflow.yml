@@ -124,7 +124,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ocaml-version: ["~4.10.1000"]
+        ocaml-version: ["4.12.x"]
         operating-system: [ubuntu-latest]
         arch: [x86_64, arm64]
 
