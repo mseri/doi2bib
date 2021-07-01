@@ -1,3 +1,8 @@
+# 0.5.1 (2021-07-01)
+
+- Fix for transitive dependency in cuz
+- Improved lower bounds on the opam file
+
 # 0.5.0 (2021-07-01)
 
 - Use cuz for the get calls with compression

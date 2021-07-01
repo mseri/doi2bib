@@ -2,7 +2,7 @@
  (public_name cuz)
  (name cuz)
  (modules :standard \ cuz_unix cuz_cohttp)
- (libraries cohttp-lwt decompress.gz decompress.de)
+ (libraries bigstringaf cohttp-lwt decompress.gz decompress.de)
  (preprocess future_syntax))
 
 (library
