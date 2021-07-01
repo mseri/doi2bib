@@ -5,32 +5,24 @@ exception Bad_gateway
 exception PubMed_DOI_not_found
 
 let rec get ?proxy ?headers ?fallback uri =
+  let headers = Cuz_cohttp.accept_gzde headers in
   let uri = Option.value ~default:"" proxy ^ uri |> Uri.of_string in
-  let headers = Ezgz.gzip_h headers in
   let open Lwt.Syntax in
-  let* resp, body = Cohttp_lwt_unix.Client.get ?headers uri in
+  let* resp, body = Cohttp_lwt_unix.Client.get ~headers uri in
   let status = Cohttp_lwt.Response.status resp in
   let* () = if status <> `OK then Cohttp_lwt.Body.drain_body body else Lwt.return_unit in
   match status with
-  | `OK ->
-    let* body = Cohttp_lwt.Body.to_string body in
-    let is_gzipped : bool =
-      Cohttp_lwt.Response.headers resp
-      |> fun resp -> Cohttp.Header.get resp "content-encoding" = Some "gzip"
-    in
-    let open Ezgz in
-    (try Lwt.return @@ extract is_gzipped body with
-    | GzipError error -> Lwt.fail @@ Failure error)
+  | `OK -> Cuz_cohttp.decompress (resp, body)
   | `Found ->
     let uri' = Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location) in
     (match uri', fallback with
-    | Some uri, _ -> get ?proxy ?headers ?fallback (Uri.to_string uri)
-    | None, Some uri -> get ?proxy ?headers uri
+    | Some uri, _ -> get ?proxy ~headers ?fallback (Uri.to_string uri)
+    | None, Some uri -> get ?proxy ~headers uri
     | None, None ->
       Lwt.fail_with ("Malformed redirection trying to access '" ^ Uri.to_string uri ^ "'."))
   | d when (d = `Not_found || d = `Gateway_timeout) && Option.is_some fallback ->
     (match fallback with
-    | Some uri -> get ?proxy ?headers uri
+    | Some uri -> get ?proxy ~headers uri
     | None -> assert false)
   | `Bad_request | `Not_found -> Lwt.fail Entry_not_found
   | `Bad_gateway -> Lwt.fail Bad_gateway
@@ -43,15 +35,30 @@ let rec get ?proxy ?headers ?fallback uri =
       ^ "'.")
 
 
+let cleanup =
+  let re_whsp = Re.(compile @@ seq [ bol; rep1 space ]) in
+  let re_endbr = Re.(compile @@ str "},") in
+  let re_title = Re.(compile @@ str ", title=") in
+  let re_last = Re.(compile @@ seq [ char '}'; rep space; char '}' ]) in
+  fun body ->
+    let body = Re.replace_string ~by:"" re_whsp body in
+    let body = Re.replace_string ~by:"},\n  " re_endbr body in
+    let body = Re.replace_string ~by:",\n   title=" re_title body in
+    Re.replace_string ~by:"}\n}" re_last body
+
+
 let bib_of_doi ?proxy doi =
-  let uri = "https://doi.org/" ^ String.trim doi in
+  let uri = "https://dx.doi.org/" ^ String.trim doi in
   let headers =
-    Cohttp.Header.of_list [ "Accept", "application/x-bibtex"; "charset", "utf-8" ]
+    Cohttp.Header.of_list
+      [ "Accept", "text/bibliography; style=bibtex"; "charset", "utf-8" ]
   in
   let fallback =
     "https://citation.crosscite.org/format?doi=" ^ doi ^ "&style=bibtex&lang=en-US"
   in
-  get ?proxy ~headers ~fallback uri
+  let open Lwt.Syntax in
+  let* body = get ?proxy ~headers ~fallback uri in
+  Lwt.return (cleanup body)
 
 
 let bib_of_arxiv ?proxy arxiv =
@@ -65,7 +72,10 @@ let bib_of_arxiv ?proxy arxiv =
     in
     bib_of_doi ?proxy doi
   with
-  | Ezxmlm.Tag_not_found _ -> parse_atom arxiv atom_blob |> Lwt.return
+  | Ezxmlm.Tag_not_found _ ->
+    Lwt.catch
+      (fun () -> get ("https://arxiv.org/bibtex/" ^ String.trim arxiv))
+      (fun _e -> parse_atom arxiv atom_blob |> Lwt.return)
 
 
 let bib_of_pubmed ?proxy pubmed =
