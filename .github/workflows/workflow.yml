@@ -149,7 +149,7 @@ jobs:
             "dependencies": {
               "ocaml": "${{ matrix.ocaml-version }}",
               "doi2bib": "./doi2bib.opam",
-              "generate": "github:EduardoRFS/reason-mobile:generate.json#859a7ddd5728342a96cbaae584da22863a023f68"
+              "generate": "github:EduardoRFS/reason-mobile:generate.json#7380165719ae09a2d185527f831c08eb35c03ebb"
             },
             "resolutions": {
               "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
