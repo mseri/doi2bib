@@ -33,7 +33,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
         ocaml-version:
-          - 4.12.0
+          - 4.12.x
         include:
           - os: macos-latest
             suffix: x86_64-apple-darwin
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
-        uses: ocaml/setup-ocaml@v1
+        uses: ocaml/setup-ocaml@v2
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
