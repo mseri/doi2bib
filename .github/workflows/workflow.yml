@@ -79,7 +79,7 @@ jobs:
 
       - name: Build project
         run: |
-          opam install astring cmdliner cohttp-lwt-unix ezxmlm lwt_ppx
+          opam install --deps-only .
           opam exec -- dune build -p doi2bib
 
       - name: Check code formatting
