@@ -72,13 +72,15 @@ jobs:
           echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
 
       - name: Install dependencies
+        if: ${{ !startsWith(runner.os, 'Mac') }}
         run: |
           opam depext tls decompress
           opam install tls decompress
-          opam install astring cmdliner cohttp-lwt-unix ezxmlm lwt_ppx
 
       - name: Build project
-        run: opam exec -- dune build -p doi2bib
+        run: |
+          opam install astring cmdliner cohttp-lwt-unix ezxmlm lwt_ppx
+          opam exec -- dune build -p doi2bib
 
       - name: Check code formatting
         if: ${{ success() && startsWith(runner.os, 'Linux') }}
