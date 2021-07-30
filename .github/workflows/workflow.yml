@@ -158,7 +158,7 @@ jobs:
               "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#c62b045106fafa407874053bdd79273a8f591352",
               "@opam/num": "github:dune-universe/num:num.opam#bdb2d7653e927e142b701b51d89f393471279713",
               "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#4fc08affe26642b6285cedc1d2ca7ec03127caf3",
-              "@opam/checkseum": "github:mirage/checkseum:checkseum.opam#4a843a9ecd635bec8fb6db76fdd2e557175a9ddf",
+              "@opam/checkseum": "github:mirage/checkseum:checkseum.opam#74f47be3405a1f1a9b40298ec4936fbe30d20237",
               "@opam/cstruct-sexp": "5.2.0",
               "@opam/ocamlfind": "1.8.1",
               "@opam/decompress": "1.4.1"
