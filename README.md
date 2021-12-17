@@ -52,7 +52,6 @@ Examples of use (the bibtex entry is printed on standard output):
 Each release comes with attached binaries for windows, mac and linux.
 If you want to build the package yourself, the most immediate way is by running
 
-    $ opam pin add doi2bib https://github.com/mseri/doi2bib.git
     $ opam install doi2bib
 
 To run the tests, clone this repository and from of the root of the project run

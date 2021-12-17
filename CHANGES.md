@@ -1,3 +1,12 @@
+# 0.5.2 (2021-12-17)
+
+- Move from cuz to the published clz
+- Move from dx.doi.org to crossref rest api service,
+  the latter gives better and more consistent results and
+  does not seem to require a fallback service any longer
+- Update arxiv generated bibtex accordingly
+- Update ocamlformat
+
 # 0.5.1 (2021-07-01)
 
 - Fix for transitive dependency in cuz
