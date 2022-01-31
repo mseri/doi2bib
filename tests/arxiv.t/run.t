@@ -30,11 +30,11 @@ Arxiv Entry (with DOI entry) executed without prefix
   }
 Arxiv Entry (without DOI entry) and with old id
   $ doi2bib arXiv:math/0606217
-  @misc{Marklof2006Distribution,
-            title={Distribution modulo one and Ratner's theorem},
-            author={Jens Marklof},
-            year={2006},
-            eprint={math/0606217},
-            archivePrefix={arXiv},
-            primaryClass={math.NT}
-    }
+  @misc{marklof2006distribution,
+        title={Distribution modulo one and Ratner's theorem}, 
+        author={Jens Marklof},
+        year={2006},
+        eprint={math/0606217},
+        archivePrefix={arXiv},
+        primaryClass={math.NT}
+  }
