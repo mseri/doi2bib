@@ -30,13 +30,13 @@ let doi2bib id =
                 or 'PMC' as appropriate."
                id)
 
-let process_file operation fname =
+let process_file outfile infile =
   let lines =
-    let f = open_in_bin fname in
+    let f = open_in_bin infile in
     Fun.protect
       ~finally:(fun () -> close_in_noerr f)
       (fun () ->
-        Seq.unfold
+        Lwt_seq.unfold
           (fun c ->
             try Some (input_line c, c)
             with End_of_file | _ ->
@@ -44,7 +44,19 @@ let process_file operation fname =
               None)
           f)
   in
-  Seq.iter operation lines
+  let open Lwt.Syntax in
+  let* f = Lwt_io.open_file ~mode:Output outfile in
+  let process f id =
+    match Http.get_bib_entry @@ Parser.parse_id id with
+    | bibtex ->
+        let* bibtex in
+        let* () = Lwt_io.write f bibtex in
+        Lwt_io.write_char f '\n'
+    | exception e -> Lwt_io.eprintf "Error for %s: %s" id (Printexc.to_string e)
+  in
+  Lwt.finalize
+    (fun () -> Lwt_seq.iter_s (process f) lines)
+    (fun () -> Lwt_io.close f)
 
 let () =
   let open Cmdliner in
