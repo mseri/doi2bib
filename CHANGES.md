@@ -1,3 +1,7 @@
+# 0.5.3 (2022-02-02)
+
+- Update windows CI to collect relevant shared libraries
+
 # 0.5.2 (2021-12-17)
 
 - Move from cuz to the published clz
