@@ -30,6 +30,22 @@ let doi2bib id =
                 or 'PMC' as appropriate."
                id)
 
+let process_file operation fname =
+  let lines =
+    let f = open_in_bin fname in
+    Fun.protect
+      ~finally:(fun () -> close_in_noerr f)
+      (fun () ->
+        Seq.unfold
+          (fun c ->
+            try Some (input_line c, c)
+            with End_of_file | _ ->
+              close_in c;
+              None)
+          f)
+  in
+  Seq.iter operation lines
+
 let () =
   let open Cmdliner in
   let id =
