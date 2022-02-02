@@ -56,6 +56,7 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
+          dune-cache: true
 
       - name: Set git user
         run: |
@@ -95,8 +96,15 @@ jobs:
         run: opam exec -- dune build -p doi2bib
 
       - name: Create release archive
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(runner.os, 'Win') }}
         run: opam exec -- tar czf release.tar.gz -C _build/default/bin/ doi2bib.exe
+
+      - name: Create release archive (Windows)
+        if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(runner.os, 'Win') }}
+        run: |
+          opam exec -- dos2unix .github/scripts/win.sh
+          opam exec -- bash .github/scripts/win.sh
+          opam exec -- tar czf release.tar.gz out/ 
       
       - name: Upload build artifact
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
