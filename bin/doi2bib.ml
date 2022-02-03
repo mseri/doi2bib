@@ -29,11 +29,11 @@ let process_file outfile infile =
       ic
   in
   let process oc id =
-    match Http.get_bib_entry @@ Parser.parse_id id with
-    | bibtex ->
-        let* bibtex = bibtex in
-        Lwt_io.write_line oc bibtex
-    | exception e -> Lwt_io.eprintf "Error for %s: %s" id (Printexc.to_string e)
+    Lwt.catch
+      (fun () ->
+        let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
+        Lwt_io.write_line oc bibtex)
+      (fun e -> Lwt_io.eprintf "Error for %s: %s\n" id (Printexc.to_string e))
   in
   Lwt_io.with_file ~mode:Input infile (fun ic ->
       write_out (fun oc -> Lwt_seq.iter_s (process oc) (lines ic)))
@@ -61,13 +61,13 @@ let doi2bib id file outfile =
           err
           @@ Printf.sprintf
                "Remote server error: wait some time and try again.\n\
-                This error tends to happen when the remote servers are busy."
+                This error tends to happen when the remote servers are busy.\n"
       | exception Parser.Parse_error id ->
           err
           @@ Printf.sprintf
                "Error: unable to parse ID: '%s'.\n\
                 You can force me to consider it by prepending 'doi:', 'arxiv:' \
-                or 'PMC' as appropriate."
+                or 'PMC' as appropriate.\n"
                id)
   | Some _, _ -> `Help (`Pager, None)
 
