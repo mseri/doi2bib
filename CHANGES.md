@@ -1,6 +1,7 @@
 # 0.6.1 (2022-02-03)
 
 - Fix batch processing: don't quit if some IDs are invalid
+- Fix static compilation of artifacts
 
 # 0.6.0 (2022-02-03)
 
