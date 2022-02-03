@@ -18,10 +18,20 @@ Usage:
            the form 'arXiv:ID'. PubMed IDs always start with 'PMC'.
 
     OPTIONS
+       -f FILE, --file=FILE
+           With this flag, the tool reads the file and process its lines
+           sequentially, treating them as DOIs, arXiv IDs or PubMedIDs.
+           Errors will be printed on standard error but will not terminate
+           the operation.
+
        --help[=FMT] (default=auto)
            Show this help in format FMT. The value FMT must be one of `auto',
            `pager', `groff' or `plain'. With `auto', the format is `pager` or
            `plain' whenever the TERM env var is `dumb' or undefined.
+
+       -o OUTPUT, --output=OUTPUT (absent=stdout)
+           Append the bibtex output to the specified file. It will create the
+           file if it does not exist.
 
        --version
            Show version information.
@@ -36,7 +46,7 @@ Usage:
        125 on unexpected internal errors (bugs).
 
     BUGS
-       Report bugs to https://github.com/mseri/doi2bib/issues    
+       Report bugs to https://github.com/mseri/doi2bib/issues
 
 It will retrieve the bibtex entry, using the published details when possible.
 
