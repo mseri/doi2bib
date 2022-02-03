@@ -8,9 +8,8 @@ let process_id outfile id =
   match outfile with
   | "stdout" -> Lwt_io.print bibtex
   | outfile ->
-      Lwt_io.with_file ~mode:Output outfile (fun oc ->
-          let* len = Lwt_io.length oc in
-          let* () = Lwt_io.set_position oc len in
+      let flags = [ Unix.O_WRONLY; O_APPEND; O_CREAT ] in
+      Lwt_io.with_file ~mode:Output ~flags outfile (fun oc ->
           Lwt_io.write_line oc bibtex)
 
 let process_file outfile infile =
@@ -18,7 +17,9 @@ let process_file outfile infile =
   let write_out f =
     match outfile with
     | "stdout" -> f Lwt_io.stdout
-    | outfile -> Lwt_io.with_file ~mode:Output outfile f
+    | outfile ->
+        let flags = [ Unix.O_WRONLY; O_APPEND; O_CREAT ] in
+        Lwt_io.with_file ~mode:Output ~flags outfile f
   in
   let lines ic =
     Lwt_seq.unfold_lwt
@@ -35,10 +36,7 @@ let process_file outfile infile =
     | exception e -> Lwt_io.eprintf "Error for %s: %s" id (Printexc.to_string e)
   in
   Lwt_io.with_file ~mode:Input infile (fun ic ->
-      write_out (fun oc ->
-          let* len = Lwt_io.length oc in
-          let* () = Lwt_io.set_position oc len in
-          Lwt_seq.iter_s (process oc) (lines ic)))
+      write_out (fun oc -> Lwt_seq.iter_s (process oc) (lines ic)))
 
 let doi2bib id file outfile =
   match (id, file) with
