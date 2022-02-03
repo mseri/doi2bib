@@ -82,7 +82,10 @@ let () =
     Arg.(value & opt string "" & info [ "f"; "file" ] ~docv:"FILE" ~doc)
   in
   let out =
-    let doc = "Append the bibtex output to the specified file." in
+    let doc =
+      "Append the bibtex output to the specified file. It will create the file \
+       if it does not exist."
+    in
     Arg.(
       value & opt string "stdout" & info [ "o"; "output" ] ~docv:"OUTPUT" ~doc)
   in
