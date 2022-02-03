@@ -127,92 +127,92 @@ jobs:
           asset_name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
           asset_content_type: application/zip
 
-#   cross_compile:
-#     name: Musl cross compilation build
-# 
-#     needs: [create_draft_release]
-# 
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         ocaml-version: ["4.12.x"]
-#         operating-system: [ubuntu-latest]
-#         arch: [x86_64, arm64]
-# 
-#     runs-on: ${{ matrix.operating-system }}
-# 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v2
-#       
-#       - name: Set git user
-#         run: |
-#           git config --global user.name github-actions
-#           git config --global user.email github-actions-bot@users.noreply.github.com
-#       
-#       - name: Define env
-#         run: echo "GITHUB_TAG=$(git describe --always)" >> $GITHUB_ENV
-# 
-#       - name: Create esy wrapper
-#         run: |
-#           echo '{
-#             "name": "cross-compile",
-#             "dependencies": {
-#               "ocaml": "${{ matrix.ocaml-version }}",
-#               "doi2bib": "./doi2bib.opam",
-#               "generate": "github:EduardoRFS/reason-mobile:generate.json#7380165719ae09a2d185527f831c08eb35c03ebb"
-#             },
-#             "resolutions": {
-#               "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
-#               "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#c62b045106fafa407874053bdd79273a8f591352",
-#               "@opam/num": "github:dune-universe/num:num.opam#bdb2d7653e927e142b701b51d89f393471279713",
-#               "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#4fc08affe26642b6285cedc1d2ca7ec03127caf3"
-#             }
-#           }' > esy.json
-# 
-#       - uses: actions/setup-node@v1
-#         with:
-#           node-version: 14
-# 
-#       - name: Install esy
-#         run: npm install -g esy
-# 
-#       - name: Create cross compile toolchain lock
-#         run: esy solve
-# 
-#       - uses: esy/github-action@v1
-#         with:
-#           cache-key: bump-${{ matrix.arch }}-${{ hashFiles('esy.lock/index.json') }}
-# 
-#       - name: Create wrapper
-#         run: esy generate linux.musl.${{ matrix.arch }}
-# 
-#       - name: Install dependencies
-#         run: esy @linux.musl.${{ matrix.arch }} install
-# 
-#       - name: Build
-#         run: esy @linux.musl.${{ matrix.arch }} build
-# 
-#       - name: Create release archive
-#         if: ${{ success() }}
-#         run: esy @linux.musl.${{ matrix.arch }} -p @_linux.musl.${{ matrix.arch }}/doi2bib sh -c 'tar czf release.tar.gz -C $cur__target_dir/_build/default.linux.musl.${{ matrix.arch }}/bin doi2bib.exe'
-#       
-#       - name: Upload build artifact
-#         if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
-#         uses: actions/upload-artifact@v2
-#         with:
-#           path: release.tar.gz
-#           name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.arch }}-unknown-linux-musl.tar.gz
-#           if-no-files-found: error
-# 
-#       - name: Upload release tarball
-#         if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
-#         id: upload-release-asset
-#         uses: actions/upload-release-asset@v1
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         with:
-#           upload_url: ${{ needs.create_draft_release.outputs.upload_url }}
-#           asset_path: release.tar.gz
-#           asset_name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.arch }}-unknown-linux-musl.tar.gz
-#           asset_content_type: application/zip
+  cross_compile:
+    name: Musl cross compilation build
+
+    needs: [create_draft_release]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ocaml-version: ["4.12.x"]
+        operating-system: [ubuntu-latest]
+        arch: [x86_64, arm64]
+
+    runs-on: ${{ matrix.operating-system }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set git user
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions-bot@users.noreply.github.com
+      
+      - name: Define env
+        run: echo "GITHUB_TAG=$(git describe --always)" >> $GITHUB_ENV
+
+      - name: Create esy wrapper
+        run: |
+          echo '{
+            "name": "cross-compile",
+            "dependencies": {
+              "ocaml": "${{ matrix.ocaml-version }}",
+              "doi2bib": "./doi2bib.opam",
+              "generate": "github:EduardoRFS/reason-mobile:generate.json#7ba258319b87943d2eb0d8fb84562d0afeb2d41f"
+            },
+            "resolutions": {
+              "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
+              "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#89ce1c0be0cf32889fcfb2dc20db75fbd6ece52b",
+              "@opam/num": "github:dune-universe/num:num.opam#d6ed08654a1068fb4ce029a3337d83f02952ac95",
+              "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#4fc08affe26642b6285cedc1d2ca7ec03127caf3"
+            }
+          }' > esy.json
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Install esy
+        run: npm install -g esy
+
+      - name: Create cross compile toolchain lock
+        run: esy solve
+
+      - uses: esy/github-action@v1
+        with:
+          cache-key: bump-${{ matrix.arch }}-${{ hashFiles('esy.lock/index.json') }}
+
+      - name: Create wrapper
+        run: esy generate linux.musl.${{ matrix.arch }}
+
+      - name: Install dependencies
+        run: esy @linux.musl.${{ matrix.arch }} install
+
+      - name: Build
+        run: esy @linux.musl.${{ matrix.arch }} build
+
+      - name: Create release archive
+        if: ${{ success() }}
+        run: esy @linux.musl.${{ matrix.arch }} -p @_linux.musl.${{ matrix.arch }}/doi2bib sh -c 'tar czf release.tar.gz -C $cur__target_dir/_build/default.linux.musl.${{ matrix.arch }}/bin doi2bib.exe'
+      
+      - name: Upload build artifact
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v2
+        with:
+          path: release.tar.gz
+          name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.arch }}-unknown-linux-musl.tar.gz
+          if-no-files-found: error
+
+      - name: Upload release tarball
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_draft_release.outputs.upload_url }}
+          asset_path: release.tar.gz
+          asset_name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.arch }}-unknown-linux-musl.tar.gz
+          asset_content_type: application/zip
