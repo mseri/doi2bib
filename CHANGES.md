@@ -1,3 +1,8 @@
+# 0.6.0 (2022-02-03)
+
+- Support batch processing of files of IDs
+- Support append result to file
+
 # 0.5.2 (2021-12-17)
 
 - Move from cuz to the published clz
