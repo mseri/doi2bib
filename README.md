@@ -9,44 +9,43 @@ Usage:
        arXiv or PubMed ID.
 
     SYNOPSIS
-        doi2bib [OPTION]... [ID]
+       doi2bib [OPTION]... [ID]
 
     ARGUMENTS
-        ID  A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically
-            infer what kind of ID you are using. You can force the cli to
-            lookup a DOI by using the form 'doi:ID' or an arXiv ID by using
-            the form 'arXiv:ID'. PubMed IDs always start with 'PMC'.
+       ID  A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically
+           infer what kind of ID you are using. You can force the cli to
+           lookup a DOI by using the form 'doi:ID' or an arXiv ID by using
+           the form 'arXiv:ID'. PubMed IDs always start with 'PMC'.
 
     OPTIONS
-        --help[=FMT] (default=auto)
-            Show this help in format FMT. The value FMT must be one of `auto',
-            `pager', `groff' or `plain'. With `auto', the format is `pager` or
-            `plain' whenever the TERM env var is `dumb' or undefined.
+       --help[=FMT] (default=auto)
+           Show this help in format FMT. The value FMT must be one of `auto',
+           `pager', `groff' or `plain'. With `auto', the format is `pager` or
+           `plain' whenever the TERM env var is `dumb' or undefined.
 
-        --version
-            Show version information.
+       --version
+           Show version information.
 
     EXIT STATUS
-        doi2bib exits with the following status:
+       doi2bib exits with the following status:
 
-        0   on success.
+       0   on success.
 
-        124 on command line parsing errors.
+       124 on command line parsing errors.
 
-        125 on unexpected internal errors (bugs).
+       125 on unexpected internal errors (bugs).
 
     BUGS
-        Report bugs to https://github.com/mseri/doi2bib/issues
-    
+       Report bugs to https://github.com/mseri/doi2bib/issues    
 
-It will output the bibtex entry, using the published details when possible.
+It will retrieve the bibtex entry, using the published details when possible.
 
 Examples of use (the bibtex entry is printed on standard output):
 
     $ doi2bib 10.1007/s10569-019-9946-9
-    $ doi2bib doi:10.4171/JST/226
-    $ doi2bib arXiv:1609.01724
+    $ doi2bib doi:10.4171/JST/226 -o "bibliography.bib"
     $ doi2bib 1902.00436
+    $ doi2bib arXiv:1609.01724
     $ doi2bib PMC2883744
 
 Each release comes with attached binaries for windows, mac and linux.
