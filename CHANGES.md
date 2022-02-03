@@ -1,3 +1,7 @@
+# 0.6.1 (2022-02-03)
+
+- Fix batch processing: don't quit if some IDs are invalid
+
 # 0.6.0 (2022-02-03)
 
 - Support batch processing of files of IDs
