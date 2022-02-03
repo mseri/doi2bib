@@ -2,12 +2,54 @@ open Doi2bib
 
 let err s = `Error (false, s)
 
-let doi2bib id =
-  match id with
-  | None -> `Help (`Pager, None)
-  | Some id -> (
-      match Lwt_main.run (Http.get_bib_entry @@ Parser.parse_id id) with
-      | bibtex -> `Ok (Printf.printf "%s" bibtex)
+let process_id outfile id =
+  let open Lwt.Syntax in
+  let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
+  match outfile with
+  | "stdout" -> Lwt_io.print bibtex
+  | outfile ->
+      Lwt_io.with_file ~mode:Output outfile (fun oc ->
+          let* len = Lwt_io.length oc in
+          let* () = Lwt_io.set_position oc len in
+          Lwt_io.write_line oc bibtex)
+
+let process_file outfile infile =
+  let open Lwt.Syntax in
+  let write_out f =
+    match outfile with
+    | "stdout" -> f Lwt_io.stdout
+    | outfile -> Lwt_io.with_file ~mode:Output outfile f
+  in
+  let lines ic =
+    Lwt_seq.unfold_lwt
+      (fun ic ->
+        let* line = Lwt_io.read_line_opt ic in
+        Lwt.return @@ Option.map (fun x -> (x, ic)) line)
+      ic
+  in
+  let process oc id =
+    match Http.get_bib_entry @@ Parser.parse_id id with
+    | bibtex ->
+        let* bibtex = bibtex in
+        Lwt_io.write_line oc bibtex
+    | exception e -> Lwt_io.eprintf "Error for %s: %s" id (Printexc.to_string e)
+  in
+  Lwt_io.with_file ~mode:Input infile (fun ic ->
+      write_out (fun oc ->
+          let* len = Lwt_io.length oc in
+          let* () = Lwt_io.set_position oc len in
+          Lwt_seq.iter_s (process oc) (lines ic)))
+
+let doi2bib id file outfile =
+  match (id, file) with
+  | None, "" -> `Help (`Pager, None)
+  | None, infile -> (
+      match Lwt_main.run (process_file outfile infile) with
+      | () -> `Ok ()
+      | exception e -> err @@ Printexc.to_string e)
+  | Some id, "" -> (
+      match Lwt_main.run (process_id outfile id) with
+      | () -> `Ok ()
       | exception Http.PubMed_DOI_not_found ->
           err @@ Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
       | exception Http.Entry_not_found ->
@@ -29,37 +71,23 @@ let doi2bib id =
                 You can force me to consider it by prepending 'doi:', 'arxiv:' \
                 or 'PMC' as appropriate."
                id)
-
-let process_file outfile infile =
-  let lines =
-    let f = open_in_bin infile in
-    Fun.protect
-      ~finally:(fun () -> close_in_noerr f)
-      (fun () ->
-        Lwt_seq.unfold
-          (fun c ->
-            try Some (input_line c, c)
-            with End_of_file | _ ->
-              close_in c;
-              None)
-          f)
-  in
-  let open Lwt.Syntax in
-  let* f = Lwt_io.open_file ~mode:Output outfile in
-  let process f id =
-    match Http.get_bib_entry @@ Parser.parse_id id with
-    | bibtex ->
-        let* bibtex in
-        let* () = Lwt_io.write f bibtex in
-        Lwt_io.write_char f '\n'
-    | exception e -> Lwt_io.eprintf "Error for %s: %s" id (Printexc.to_string e)
-  in
-  Lwt.finalize
-    (fun () -> Lwt_seq.iter_s (process f) lines)
-    (fun () -> Lwt_io.close f)
+  | Some _, _ -> `Help (`Pager, None)
 
 let () =
   let open Cmdliner in
+  let file =
+    let doc =
+      "With this flag, the tool reads the file and process its lines \
+       sequentially, treating them as DOIs, arXiv IDs or PubMedIDs. Errors \
+       will be printed on standard error but will not terminate the operation."
+    in
+    Arg.(value & opt string "" & info [ "f"; "file" ] ~docv:"FILE" ~doc)
+  in
+  let out =
+    let doc = "Append the bibtex output to the specified file." in
+    Arg.(
+      value & opt string "stdout" & info [ "o"; "output" ] ~docv:"OUTPUT" ~doc)
+  in
   let id =
     let doc =
       "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically \
@@ -70,7 +98,7 @@ let () =
     in
     Arg.(value & pos 0 (some string) None & info ~docv:"ID" ~doc [])
   in
-  let doi2bib_t = Term.(ret (const doi2bib $ id)) in
+  let doi2bib_t = Term.(ret (const doi2bib $ id $ file $ out)) in
   let info =
     let doc =
       "A little CLI tool to get the bibtex entry for a given DOI, arXiv or \
