@@ -65,12 +65,15 @@ jobs:
       
       - name: Define env (unix)
         if: ${{ runner.os != 'Windows' }}
-        run: echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
+        run: |
+          echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
+          echo "OPAMJOBS=1" >> $GITHUB_ENV
       
       - name: Define env (windows)
         if: ${{ runner.os == 'Windows' }}
         run: |
           echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
+          echo "OPAMJOBS=1" >> $GITHUB_ENV
 
       - name: Install dependencies
         if: ${{ !startsWith(runner.os, 'Mac') }}
@@ -160,14 +163,15 @@ jobs:
             "dependencies": {
               "ocaml": "${{ matrix.ocaml-version }}",
               "doi2bib": "./doi2bib.opam",
-              "generate": "github:mseri/reason-mobile:generate.json#c470a22a6f7548ed40351b4f68417feb9044a022"
+              "generate": "github:mseri/reason-mobile:generate.json#fe4c49ff4d762b2ec2e2eb65613ec1f7c02335ad"
             },
             "resolutions": {
               "@opam/mtime": "github:dune-universe/mtime:mtime.opam#9584b66cecc891208b31cec4628dd412b8cffe75",
               "@opam/zarith": "github:dune-universe/Zarith:zarith.opam#89ce1c0be0cf32889fcfb2dc20db75fbd6ece52b",
               "@opam/num": "github:dune-universe/num:num.opam#d6ed08654a1068fb4ce029a3337d83f02952ac95",
-              "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#4fc08affe26642b6285cedc1d2ca7ec03127caf3",
-              "@opam/parsexp": "github:janestreet/parsexp:parsexp.opam#4a4f08e08a9be78db9dd38821e80318cbe47dd96"
+              "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#a89ae0aa42aec20744bc066a753bc586954d06c7",
+              "@opam/parsexp": "github:janestreet/parsexp:parsexp.opam#4a4f08e08a9be78db9dd38821e80318cbe47dd96",
+              "@opam/uutf": "github:dune-universe/uutf:uutf.opam#6944629f736150f4e5693bc5875228b2ee40bda2"
             }
           }' > esy.json
 
