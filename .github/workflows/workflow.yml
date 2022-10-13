@@ -76,11 +76,11 @@ jobs:
         if: ${{ !startsWith(runner.os, 'Mac') }}
         run: |
           opam depext tls decompress
-          opam install tls decompress
+          OPAMJOBS=1 opam install tls decompress
 
       - name: Build project
         run: |
-          opam install --deps-only .
+          OPAMJOBS=1 opam install --deps-only .
           opam exec -- dune build -p doi2bib
 
       - name: Check code formatting
