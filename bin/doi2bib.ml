@@ -111,8 +111,7 @@ let () =
         `P "Report bugs to https://github.com/mseri/doi2bib/issues";
       ]
     in
-    Cmd.info "doi2bib" ~version:"%%VERSION%%" ~doc ~exits:Cmd.Exit.defaults
-      ~man
+    Cmd.info "doi2bib" ~version:"%%VERSION%%" ~doc ~exits:Cmd.Exit.defaults ~man
   in
   let doi2bib = Cmd.v info doi2bib_t in
   exit @@ Cmd.eval doi2bib
