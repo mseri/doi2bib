@@ -171,6 +171,7 @@ jobs:
               "@opam/num": "github:dune-universe/num:num.opam#d6ed08654a1068fb4ce029a3337d83f02952ac95",
               "@opam/cmdliner": "github:dune-universe/cmdliner:cmdliner.opam#a89ae0aa42aec20744bc066a753bc586954d06c7",
               "@opam/parsexp": "github:janestreet/parsexp:parsexp.opam#4a4f08e08a9be78db9dd38821e80318cbe47dd96",
+              "@opam/uutf": "github:dune-universe/uutf:uutf.opam#6944629f736150f4e5693bc5875228b2ee40bda2",
               "@opam/tls": "0.14.1"
             }
           }' > esy.json
