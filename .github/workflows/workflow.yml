@@ -37,7 +37,8 @@ jobs:
         include:
           - os: macos-latest
             suffix: x86_64-apple-darwin
-          - os: ubuntu-latest
+          - if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+            os: ubuntu-latest
             suffix: x86_64-unknown-linux-gnu
           - os: windows-latest
             suffix: x86_64-pc-windows-gnu
@@ -129,3 +130,53 @@ jobs:
           asset_path: release.tar.gz
           asset_name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
           asset_content_type: application/zip
+
+  nix-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [musl, arm64-musl]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v18
+      with:
+        extra_nix_config: |
+          extra-substituters = https://anmonteiro.nix-cache.workers.dev
+          extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=
+    - name: "Run nix-build"
+      run: nix build -L .#${{ matrix.platform }}
+
+    - name: Prepare env
+      if: ${{ success() }}
+      run: |
+        echo "GITHUB_TAG=$(git describe --always --tags)" >> $GITHUB_ENV
+        if [[ ${{ matrix.platform }} == "musl" ]]; then
+          echo "ARCH=x86_64" >> $GITHUB_ENV
+        else
+          echo "ARCH=arm64" >> $GITHUB_ENV 
+        fi
+
+    - name: Create release archive
+      if: ${{ success() }}
+      run: tar czf release.tar.gz -C ./result/bin doi2bib
+      
+    - name: Upload build artifact
+      if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+      uses: actions/upload-artifact@v2
+      with:
+        path: release.tar.gz
+        name: doi2bib-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
+        if-no-files-found: error
+
+    - name: Upload release tarball
+      if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_draft_release.outputs.upload_url }}
+        asset_path: release.tar.gz
+        asset_name: doi2bib-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
+        asset_content_type: application/zip
+
