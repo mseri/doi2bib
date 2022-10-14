@@ -132,6 +132,7 @@ jobs:
           asset_content_type: application/zip
 
   nix-build:
+    needs: create_draft_release
     runs-on: ubuntu-latest
     strategy:
       matrix:
