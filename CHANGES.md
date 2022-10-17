@@ -1,3 +1,7 @@
+# 0.6.2 (2022-10-17)
+
+- Workaround for %-escapes in crossref's doi url field
+
 # 0.6.1 (2022-02-03)
 
 - Fix batch processing: don't quit if some IDs are invalid
