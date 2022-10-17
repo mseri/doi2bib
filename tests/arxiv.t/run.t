@@ -2,7 +2,7 @@ Arxiv entry (with DOI entry) executed with prefix
   $ doi2bib arXiv:1609.01724
   @article{Prandi_2018,
   	doi = {10.4171/jst/226},
-  	url = {https://doi.org/10.4171%2Fjst%2F226},
+  	url = {https://doi.org/10.4171/jst/226},
   	year = 2018,
   	month = {jul},
   	publisher = {European Mathematical Society - {EMS} - Publishing House {GmbH}},
@@ -17,7 +17,7 @@ Arxiv Entry (with DOI entry) executed without prefix
   $ doi2bib 1902.00436
   @article{Vermeeren_2019,
   	doi = {10.1088/1751-8121/ab4767},
-  	url = {https://doi.org/10.1088%2F1751-8121%2Fab4767},
+  	url = {https://doi.org/10.1088/1751-8121/ab4767},
   	year = 2019,
   	month = {oct},
   	publisher = {{IOP} Publishing},
