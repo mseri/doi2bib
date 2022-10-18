@@ -92,7 +92,7 @@ To run the tests, clone this repository and from of the root of the project run
     $ opam install --deps-only .    # first time only
     $ dune runtest -p doi2bib
 
-### API references
+## API references
 
 - [DOI content negotiarion](https://citation.crosscite.org/docs.html)
 - [arXiv API](https://arxiv.org/help/api/index)
