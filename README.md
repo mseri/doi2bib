@@ -59,7 +59,13 @@ Examples of use (the bibtex entry is printed on standard output):
     $ doi2bib PMC2883744
 
 Each release comes with attached binaries for windows, mac and linux.
-If you want to build the package yourself, the most immediate way is by running
+If on macos you get a `Library not loaded: /usr/local/opt/gmp/lib/libgmp.10.dylib`
+failure, you will need to install `gmp`. Macports users can do it via `port install gmp`
+and homebrew users via `breww install gmp`.
+
+### Building instruction
+
+To build the package yourself, the most immediate way is tu use [opam](https://opam.ocaml.org/):
 
     $ opam install doi2bib
 
@@ -68,7 +74,7 @@ To run the tests, clone this repository and from of the root of the project run
     $ opam install --deps-only .    # first time only
     $ dune runtest -p doi2bib
 
-API references:
+### API references
 
 - [DOI content negotiarion](https://citation.crosscite.org/docs.html)
 - [arXiv API](https://arxiv.org/help/api/index)
