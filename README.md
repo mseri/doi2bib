@@ -50,20 +50,38 @@ Usage:
 
 It will retrieve the bibtex entry, using the published details when possible.
 
-Examples of use (the bibtex entry is printed on standard output):
+## Examples of use
+
+The bibtex entry is printed on standard output:
 
     $ doi2bib 10.1007/s10569-019-9946-9
-    $ doi2bib doi:10.4171/JST/226 -o "bibliography.bib"
     $ doi2bib 1902.00436
     $ doi2bib arXiv:1609.01724
     $ doi2bib PMC2883744
 
-Each release comes with attached binaries for windows, mac and linux.
+The bibtex entry is saved in the `bibliography.bib` file:
+
+    $ doi2bib doi:10.4171/JST/226 -o "bibliography.bib"
+
+This will create the file if not present or append the
+bibliography to the file.
+
+You can batch-process lists of entries by listing them
+line by line in a file and using the `--file` option.
+
+## Installation
+
+Each release comes with attached binaries for windows, mac and linux. You can simply
+unpack the binary and place in a folder accessible by your terminal of choice.
+
+## Troubleshooting
+
 If on macos you get a `Library not loaded: /usr/local/opt/gmp/lib/libgmp.10.dylib`
 failure, you will need to install `gmp`. Macports users can do it via `port install gmp`
 and homebrew users via `breww install gmp`.
 
-### Building instruction
+
+## Building instruction
 
 To build the package yourself, the most immediate way is tu use [opam](https://opam.ocaml.org/):
 
