@@ -1,6 +1,9 @@
 # doi2bib ![Build status](https://github.com/mseri/doi2bib/workflows/Main%20workflow/badge.svg)
 Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID.
 
+Just so you know, there is now [Zotero BIB](https://zbib.org/) on the browser that can do this
+(and more). I will keep maintaining `doi2bib` though, since it is an integral part my workflow.
+
 Usage:
 
     $ doi2bib --help=plain
