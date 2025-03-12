@@ -1,15 +1,3 @@
 Pubmed entry with 'PMC' prefix.
   $ doi2bib PMC2883744
-  @article{Comas_2010,
-  	doi = {10.1038/ng.590},
-  	url = {https://doi.org/10.1038/ng.590},
-  	year = 2010,
-  	month = {may},
-  	publisher = {Springer Science and Business Media {LLC}},
-  	volume = {42},
-  	number = {6},
-  	pages = {498--503},
-  	author = {I{\~{n}}aki Comas and Jaidip Chakravartti and Peter M Small and James Galagan and Stefan Niemann and Kristin Kremer and Joel D Ernst and Sebastien Gagneux},
-  	title = {Human T cell epitopes of Mycobacterium tuberculosis are evolutionarily hyperconserved},
-  	journal = {Nature Genetics}
-  }
+   @article{Comas_2010, title={Human T cell epitopes of Mycobacterium tuberculosis are evolutionarily hyperconserved}, volume={42}, ISSN={1546-1718}, url={http://dx.doi.org/10.1038/ng.590}, DOI={10.1038/ng.590}, number={6}, journal={Nature Genetics}, publisher={Springer Science and Business Media LLC}, author={Comas, Iñaki and Chakravartti, Jaidip and Small, Peter M and Galagan, James and Niemann, Stefan and Kremer, Kristin and Ernst, Joel D and Gagneux, Sebastien}, year={2010}, month=may, pages={498–503} }
