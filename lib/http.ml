@@ -9,7 +9,7 @@ let rec get ?proxy ?headers ?fallback uri =
   let uri = Option.value ~default:"" proxy ^ uri |> Uri.of_string in
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ~headers uri in
-  let status = Cohttp_lwt.Response.status resp in
+  let status = Cohttp.Response.status resp in
   let* () =
     if status <> `OK then Cohttp_lwt.Body.drain_body body else Lwt.return_unit
   in
@@ -17,7 +17,7 @@ let rec get ?proxy ?headers ?fallback uri =
   | `OK -> Clz_cohttp.decompress (resp, body)
   | `Found -> (
       let uri' =
-        Cohttp_lwt.(resp |> Response.headers |> Cohttp.Header.get_location)
+        resp |> Cohttp.Response.headers |> Cohttp.Header.get_location
       in
       match (uri', fallback) with
       | Some uri, _ -> get ?proxy ~headers ?fallback (Uri.to_string uri)
