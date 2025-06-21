@@ -41,23 +41,22 @@ let process_id outfile id =
      brute way of dealing with it but it has been working
      fine for me on a huge number of examples.
      See https://github.com/mseri/doi2bib/issues/20 for context*)
-  let bibtex = Re.replace ~all:true url_re ~f bibtex in
+  let bibtex_out = Re.replace ~all:true url_re ~f bibtex in
+
+  (* Parse and format the BibTeX *)
+  let parsed_items = Bibtex.parse_bibtex bibtex_out in
+  let formatted = Bibtex.pretty_print_bibtex parsed_items in
+
+  (* Write the output *)
   match outfile with
-  | "stdout" -> Lwt_io.print bibtex
+  | "stdout" -> Lwt_io.print formatted
   | outfile ->
       let flags = [ Unix.O_WRONLY; O_APPEND; O_CREAT ] in
       Lwt_io.with_file ~mode:Output ~flags outfile (fun oc ->
-          Lwt_io.write_line oc bibtex)
+          Lwt_io.write_line oc formatted)
 
 let process_file outfile infile =
   let open Lwt.Syntax in
-  let write_out f =
-    match outfile with
-    | "stdout" -> f Lwt_io.stdout
-    | outfile ->
-        let flags = [ Unix.O_WRONLY; O_APPEND; O_CREAT ] in
-        Lwt_io.with_file ~mode:Output ~flags outfile f
-  in
   let lines ic =
     Lwt_seq.unfold_lwt
       (fun ic ->
@@ -65,15 +64,40 @@ let process_file outfile infile =
         Lwt.return @@ Option.map (fun x -> (x, ic)) line)
       ic
   in
-  let process oc id =
+  let bibtex_buffer = Buffer.create 1024 in
+
+  let process id =
     Lwt.catch
       (fun () ->
         let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
-        Lwt_io.write_line oc bibtex)
+        let f grp =
+          let prefix = Re.Group.get grp 1 in
+          let url = Re.Group.get grp 2 in
+          String.concat "" [ prefix; unescape url; "}," ]
+        in
+        let bibtex = Re.replace ~all:true url_re ~f bibtex in
+        Buffer.add_string bibtex_buffer bibtex;
+        Buffer.add_string bibtex_buffer "\n";
+        Lwt.return_unit)
       (fun e -> Lwt_io.eprintf "Error for %s: %s\n" id (Printexc.to_string e))
   in
+
+  let write_out () =
+    let bibtex_out = Buffer.contents bibtex_buffer in
+    let parsed_items = Bibtex.parse_bibtex bibtex_out in
+    let formatted = Bibtex.pretty_print_bibtex parsed_items in
+
+    match outfile with
+    | "stdout" -> Lwt_io.print formatted
+    | outfile ->
+        let flags = [ Unix.O_WRONLY; O_APPEND; O_CREAT ] in
+        Lwt_io.with_file ~mode:Output ~flags outfile (fun oc ->
+            Lwt_io.write oc formatted)
+  in
+
   Lwt_io.with_file ~mode:Input infile (fun ic ->
-      write_out (fun oc -> Lwt_seq.iter_s (process oc) (lines ic)))
+      let* () = Lwt_seq.iter_s process (lines ic) in
+      write_out ())
 
 let doi2bib id file outfile =
   match (id, file) with
