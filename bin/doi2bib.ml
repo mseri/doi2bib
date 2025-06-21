@@ -45,7 +45,18 @@ let process_id outfile id =
 
   (* Parse and format the BibTeX *)
   let parsed_items = Bibtex.parse_bibtex bibtex_out in
-  let formatted = Bibtex.pretty_print_bibtex parsed_items in
+  let formatted =
+    if List.length parsed_items = 0 then (
+      Printf.eprintf
+        "\n\
+         Error: unable to parse the BibTeX entry for %s.\n\
+         Please report this issue at github.com/mseri/doi2bib/issues"
+        id;
+      bibtex_out)
+    else
+      (* Pretty print the BibTeX entries *)
+      Bibtex.pretty_print_bibtex parsed_items
+  in
 
   (* Write the output *)
   match outfile with

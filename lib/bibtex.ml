@@ -282,7 +282,13 @@ let field_list =
   optional
     ( field_entry >>= fun first ->
       many (ws (char ',') >>= fun _ -> ws field_entry) >>= fun rest ->
-      return (first :: rest) )
+      (* Handle optional trailing commas (any number) *)
+      let rec skip_trailing_commas input pos =
+        match ws (char ',') input pos with
+        | Some (_, pos') -> skip_trailing_commas input pos'
+        | None -> Some ((), pos)
+      in
+      bind skip_trailing_commas (fun _ -> return (first :: rest)) )
   >>= fun fields -> return (match fields with Some fs -> fs | None -> [])
 
 let entry_type_parser =
