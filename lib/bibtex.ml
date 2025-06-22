@@ -115,13 +115,35 @@ let rec skip_while pred input pos =
   | Some c when pred c -> skip_while pred input (pos + 1)
   | _ -> pos
 
+(* Helper to skip over a comment *)
+let skip_comment input pos =
+  match peek_char input pos with
+  | Some '%' ->
+      let rec skip_to_eol pos =
+        match peek_char input pos with
+        | None -> pos
+        | Some '\n' -> pos + 1
+        | Some '\r' ->
+            if pos + 1 < String.length input && input.[pos + 1] = '\n' then
+              pos + 2
+            else pos + 1
+        | Some _ -> skip_to_eol (pos + 1)
+      in
+      skip_to_eol (pos + 1)
+  | _ -> pos
+
 let whitespace input pos =
-  let pos' =
-    skip_while
-      (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-      input pos
+  let rec skip_ws_and_comments pos =
+    let pos' =
+      skip_while
+        (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+        input pos
+    in
+    match peek_char input pos' with
+    | Some '%' -> skip_ws_and_comments (skip_comment input pos')
+    | _ -> pos'
   in
-  Some ((), pos')
+  Some ((), skip_ws_and_comments pos)
 
 let ws p =
   whitespace >>= fun _ ->
