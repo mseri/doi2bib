@@ -115,35 +115,13 @@ let rec skip_while pred input pos =
   | Some c when pred c -> skip_while pred input (pos + 1)
   | _ -> pos
 
-(* Helper to skip over a comment *)
-let skip_comment input pos =
-  match peek_char input pos with
-  | Some '%' ->
-      let rec skip_to_eol pos =
-        match peek_char input pos with
-        | None -> pos
-        | Some '\n' -> pos + 1
-        | Some '\r' ->
-            if pos + 1 < String.length input && input.[pos + 1] = '\n' then
-              pos + 2
-            else pos + 1
-        | Some _ -> skip_to_eol (pos + 1)
-      in
-      skip_to_eol (pos + 1)
-  | _ -> pos
-
 let whitespace input pos =
-  let rec skip_ws_and_comments pos =
-    let pos' =
-      skip_while
-        (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-        input pos
-    in
-    match peek_char input pos' with
-    | Some '%' -> skip_ws_and_comments (skip_comment input pos')
-    | _ -> pos'
+  let pos' =
+    skip_while
+      (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+      input pos
   in
-  Some ((), skip_ws_and_comments pos)
+  Some ((), pos')
 
 let ws p =
   whitespace >>= fun _ ->
@@ -301,13 +279,52 @@ let field_entry =
   ws (char '=') >>= fun _ ->
   ws field_value >>= fun value -> return { name; value }
 
+(* Helper to skip comments inside bibtex entries *)
+let skip_comment_line input pos =
+  match peek_char input pos with
+  | Some '%' ->
+      (* Skip the rest of the line *)
+      let rec skip_to_eol pos =
+        match peek_char input pos with
+        | None -> pos
+        | Some '\n' -> pos + 1
+        | Some '\r' ->
+            if pos + 1 < String.length input && input.[pos + 1] = '\n' then
+              pos + 2
+            else pos + 1
+        | Some _ -> skip_to_eol (pos + 1)
+      in
+      Some ((), skip_to_eol (pos + 1))
+  | _ -> None
+
+(* Whitespace that also skips comments - specifically for within entries *)
+let ws_with_comments p input pos =
+  let rec skip_ws_and_comments pos =
+    let pos' =
+      skip_while
+        (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+        input pos
+    in
+    match skip_comment_line input pos' with
+    | Some (_, pos'') -> skip_ws_and_comments pos''
+    | None -> pos'
+  in
+  let pos' = skip_ws_and_comments pos in
+  match p input pos' with
+  | Some (x, pos'') ->
+      let pos''' = skip_ws_and_comments pos'' in
+      Some (x, pos''')
+  | None -> None
+
 let field_list =
   optional
     ( field_entry >>= fun first ->
-      many (ws (char ',') >>= fun _ -> ws field_entry) >>= fun rest ->
+      many
+        (ws_with_comments (char ',') >>= fun _ -> ws_with_comments field_entry)
+      >>= fun rest ->
       (* Handle optional trailing commas (any number) *)
       let rec skip_trailing_commas input pos =
-        match ws (char ',') input pos with
+        match ws_with_comments (char ',') input pos with
         | Some (_, pos') -> skip_trailing_commas input pos'
         | None -> Some ((), pos)
       in
@@ -322,7 +339,8 @@ let bibtex_entry =
   entry_type_parser >>= fun entry_type ->
   ws (char '{') >>= fun _ ->
   ws identifier >>= fun citekey ->
-  optional (ws (char ',') >>= fun _ -> field_list) >>= fun fields ->
+  optional (ws_with_comments (char ',') >>= fun _ -> field_list)
+  >>= fun fields ->
   ws (char '}') >>= fun _ ->
   return
     {
@@ -427,11 +445,11 @@ let format_entry entry =
   header ^ fields_str ^ "\n}"
 
 let format_bibtex_item = function
-  | Entry entry -> format_entry entry
+  | Entry entry -> format_entry entry ^ "\n"
   | Comment comment -> "%" ^ comment
 
 let pretty_print_bibtex items =
-  String.concat "\n\n" (List.map format_bibtex_item items)
+  String.concat "\n" (List.map format_bibtex_item items)
 
 (* Helper function to clean and normalize BibTeX entries *)
 let clean_bibtex input =

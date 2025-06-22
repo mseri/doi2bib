@@ -119,6 +119,13 @@ Test handling comments in BibTeX file
 
   $ bibfmt -f comments.bib
   % This is a comment
+  @article{CommentTest,
+    title = "Entry with comments",
+    author = "Some Author",
+    year = 2022
+  }
+  
+  % Another comment at the end
 
 Test handling of entries with special characters
   $ cat > special.bib << EOF
