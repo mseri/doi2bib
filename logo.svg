@@ -46,7 +46,4 @@
   <circle cx="78" cy="158" r="2" fill="#10b981"/>
   <text x="60" y="170" font-family="monospace" font-size="8" fill="#10b981" font-weight="bold">$ doi2bib</text>
 
-  <!-- Tool name -->
-
-<text x="100" y="190" font-family="sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" font-weight="bold">doi2bib</text>
 </svg>
