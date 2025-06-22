@@ -122,6 +122,7 @@ Test handling comments in BibTeX file
   @article{CommentTest,
     title = "Entry with comments",
     author = "Some Author",
+    % Comment within entry
     year = 2022
   }
   

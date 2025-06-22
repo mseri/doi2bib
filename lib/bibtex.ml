@@ -22,10 +22,12 @@ type entry_type =
   | TechReport
   | Unpublished
 
+type entry_content = Field of field | EntryComment of string
+
 type bibtex_entry = {
   entry_type : entry_type;
   citekey : string;
-  fields : field list;
+  contents : entry_content list;
 }
 
 type bibtex_item = Entry of bibtex_entry | Comment of string
@@ -279,57 +281,125 @@ let field_entry =
   ws (char '=') >>= fun _ ->
   ws field_value >>= fun value -> return { name; value }
 
-(* Helper to skip comments inside bibtex entries *)
-let skip_comment_line input pos =
+(* Parse comments inside bibtex entries *)
+let parse_comment_line input pos =
   match peek_char input pos with
   | Some '%' ->
-      (* Skip the rest of the line *)
-      let rec skip_to_eol pos =
+      (* Get the comment text without the % *)
+      let comment_start = pos + 1 in
+      let rec find_eol pos =
         match peek_char input pos with
         | None -> pos
-        | Some '\n' -> pos + 1
-        | Some '\r' ->
-            if pos + 1 < String.length input && input.[pos + 1] = '\n' then
-              pos + 2
-            else pos + 1
-        | Some _ -> skip_to_eol (pos + 1)
+        | Some '\n' -> pos
+        | Some '\r' -> pos
+        | Some _ -> find_eol (pos + 1)
       in
-      Some ((), skip_to_eol (pos + 1))
+      let eol_pos = find_eol (pos + 1) in
+      let comment_text =
+        if eol_pos > comment_start then
+          String.sub input comment_start (eol_pos - comment_start)
+        else ""
+      in
+
+      (* Skip past the EOL character(s) *)
+      let next_pos =
+        match peek_char input eol_pos with
+        | None -> eol_pos
+        | Some '\n' -> eol_pos + 1
+        | Some '\r' ->
+            if eol_pos + 1 < String.length input && input.[eol_pos + 1] = '\n'
+            then eol_pos + 2
+            else eol_pos + 1
+        | Some _ -> eol_pos (* Should not happen *)
+      in
+
+      Some (comment_text, next_pos)
   | _ -> None
 
-(* Whitespace that also skips comments - specifically for within entries *)
+(* Parse an entry comment *)
+let entry_comment_parser input pos =
+  match parse_comment_line input pos with
+  | Some (comment_text, pos') -> Some (EntryComment comment_text, pos')
+  | None -> None
+
+(* Parse either a field or a comment within an entry *)
+let entry_content_parser input pos =
+  match entry_comment_parser input pos with
+  | Some result -> Some result
+  | None -> (
+      match field_entry input pos with
+      | Some (field, pos') -> Some (Field field, pos')
+      | None -> None)
+
+(* Whitespace parser that collects comments within entries *)
 let ws_with_comments p input pos =
-  let rec skip_ws_and_comments pos =
-    let pos' =
+  let pos' =
+    skip_while
+      (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+      input pos
+  in
+  match p input pos' with
+  | Some (x, pos'') ->
+      let pos''' =
+        skip_while
+          (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+          input pos''
+      in
+      Some (x, pos''')
+  | None -> None
+
+(* Parse the contents of an entry - both fields and comments *)
+let entry_contents_parser input pos =
+  let parse_item input pos =
+    (* Skip whitespace *)
+    let pos_after_ws =
       skip_while
         (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
         input pos
     in
-    match skip_comment_line input pos' with
-    | Some (_, pos'') -> skip_ws_and_comments pos''
-    | None -> pos'
+    (* Try to parse a comment first *)
+    match entry_comment_parser input pos_after_ws with
+    | Some (comment, pos') -> Some (comment, pos')
+    | None -> (
+        (* Try to parse a field *)
+        match field_entry input pos_after_ws with
+        | Some (field, pos') -> Some (Field field, pos')
+        | None -> None)
   in
-  let pos' = skip_ws_and_comments pos in
-  match p input pos' with
-  | Some (x, pos'') ->
-      let pos''' = skip_ws_and_comments pos'' in
-      Some (x, pos''')
-  | None -> None
-
-let field_list =
-  optional
-    ( field_entry >>= fun first ->
-      many
-        (ws_with_comments (char ',') >>= fun _ -> ws_with_comments field_entry)
-      >>= fun rest ->
-      (* Handle optional trailing commas (any number) *)
-      let rec skip_trailing_commas input pos =
-        match ws_with_comments (char ',') input pos with
-        | Some (_, pos') -> skip_trailing_commas input pos'
-        | None -> Some ((), pos)
-      in
-      bind skip_trailing_commas (fun _ -> return (first :: rest)) )
-  >>= fun fields -> return (match fields with Some fs -> fs | None -> [])
+  let rec parse_contents acc input pos =
+    (* Skip whitespace *)
+    let pos_after_ws =
+      skip_while
+        (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+        input pos
+    in
+    (* Check for end of entry *)
+    match peek_char input pos_after_ws with
+    | Some '}' ->
+        (* End of entry *)
+        Some (List.rev acc, pos_after_ws)
+    | Some ',' ->
+        (* Skip comma and continue *)
+        parse_contents acc input (pos_after_ws + 1)
+    | _ -> (
+        (* Try to parse an item (field or comment) *)
+        match parse_item input pos_after_ws with
+        | Some (item, pos') ->
+            (* Got an item, look for comma or end *)
+            let pos_after_ws2 =
+              skip_while
+                (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+                input pos'
+            in
+            (* Continue parsing with this item added *)
+            parse_contents (item :: acc) input pos_after_ws2
+        | None -> (
+            (* No valid item found, check if we're at the end *)
+            match peek_char input pos_after_ws with
+            | Some '}' -> Some (List.rev acc, pos_after_ws)
+            | _ -> None))
+  in
+  parse_contents [] input pos
 
 let entry_type_parser =
   identifier >>= fun type_str -> return (entry_type_of_string type_str)
@@ -339,15 +409,11 @@ let bibtex_entry =
   entry_type_parser >>= fun entry_type ->
   ws (char '{') >>= fun _ ->
   ws identifier >>= fun citekey ->
-  optional (ws_with_comments (char ',') >>= fun _ -> field_list)
-  >>= fun fields ->
-  ws (char '}') >>= fun _ ->
-  return
-    {
-      entry_type;
-      citekey;
-      fields = (match fields with Some fs -> fs | None -> []);
-    }
+  (* Parse optional comma *)
+  optional (ws (char ',')) >>= fun _ ->
+  (* Parse contents (fields and comments) *)
+  entry_contents_parser >>= fun contents ->
+  ws (char '}') >>= fun _ -> return { entry_type; citekey; contents }
 
 let comment =
   char '%' >>= fun _ ->
@@ -435,14 +501,30 @@ let format_field_value = function
 let format_field field =
   "  " ^ field.name ^ " = " ^ format_field_value field.value
 
+let format_entry_content = function
+  | Field field -> format_field field
+  | EntryComment comment -> "  %" ^ comment
+
 let format_entry entry =
   let entry_type_str = string_of_entry_type entry.entry_type in
   let header = "@" ^ entry_type_str ^ "{" ^ entry.citekey in
-  let fields_str =
-    if entry.fields = [] then ""
-    else ",\n" ^ String.concat ",\n" (List.map format_field entry.fields)
+  let contents_str =
+    if entry.contents = [] then ""
+    else
+      let formatted_contents = List.map format_entry_content entry.contents in
+      let rec add_commas_except_last = function
+        | [] -> []
+        | [ last ] -> [ last ] (* No comma for the last item *)
+        | content :: rest ->
+            let comma_content =
+              if String.contains content '%' then content else content ^ ","
+            in
+            comma_content :: add_commas_except_last rest
+      in
+      let contents_with_commas = add_commas_except_last formatted_contents in
+      ",\n" ^ String.concat "\n" contents_with_commas
   in
-  header ^ fields_str ^ "\n}"
+  header ^ contents_str ^ "\n}"
 
 let format_bibtex_item = function
   | Entry entry -> format_entry entry ^ "\n"
