@@ -18,4 +18,4 @@
 (package
  (name doi2bib)
  (synopsis
-  "Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID"))
+  "CLI tools to get bibtex entries from DOI/arXiv/PubMed IDs and format bibtex files"))

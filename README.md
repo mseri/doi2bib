@@ -1,5 +1,5 @@
 # doi2bib ![Build status](https://github.com/mseri/doi2bib/workflows/Main%20workflow/badge.svg)
-Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID.
+Small CLI tools to work with bibtex entries: get entries from DOI/arXiv/PubMed IDs and format bibtex files.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/mseri/doi2bib/refs/heads/main/logo.svg"/>
@@ -8,7 +8,14 @@ Small CLI to get a bibtex entry from a DOI, an arXiv ID or a PubMed ID.
 Just so you know, there is now [Zotero BIB](https://zbib.org/) on the browser that can do this
 (and more). I will keep maintaining `doi2bib` though, since it is an integral part my workflow.
 
-Usage:
+## Tools
+
+This package provides two CLI tools:
+
+1. **doi2bib** - Get bibtex entries from DOI, arXiv ID, or PubMed ID
+2. **bibfmt** - Pretty print and format bibtex files
+
+## doi2bib Usage:
 
     $ doi2bib --help=plain
     NAME
@@ -57,7 +64,48 @@ Usage:
 
 It will retrieve the bibtex entry, using the published details when possible.
 
+## bibfmt Usage:
+
+    $ bibfmt --help=plain
+    NAME
+       bibfmt - A little CLI tool to pretty print bibtex files.
+
+    SYNOPSIS
+       bibfmt [--file=FILE] [--output=OUTPUT] [OPTION]...
+
+    OPTIONS
+       -f FILE, --file=FILE
+           Reads the bib content from the specified file instead of the
+           standard input.
+
+       -o OUTPUT, --output=OUTPUT (absent=stdout)
+           Saves the pretty printed bib to the specified file.
+
+       --help[=FMT] (default=auto)
+           Show this help in format FMT. The value FMT must be one of `auto',
+           `pager', `groff' or `plain'. With `auto', the format is `pager` or
+           `plain' whenever the TERM env var is `dumb' or undefined.
+
+       --version
+           Show version information.
+
+    EXIT STATUS
+       bibfmt exits with the following status:
+
+       0   on success.
+
+       123 on indiscriminate errors reported on standard error.
+
+       124 on command line parsing errors.
+
+       125 on unexpected internal errors (bugs).
+
+    BUGS
+       Report bugs to https://github.com/mseri/doi2bib/issues
+
 ## Examples of use
+
+### doi2bib examples
 
 The bibtex entry is printed on standard output:
 
@@ -76,10 +124,24 @@ bibliography to the file.
 You can batch-process lists of entries by listing them
 line by line in a file and using the `--file` option.
 
+### bibfmt examples
+
+Format a bibtex file and print to stdout:
+
+    $ bibfmt -f bibliography.bib
+
+Format a bibtex file and save to a new file:
+
+    $ bibfmt -f messy.bib -o clean.bib
+
+Format bibtex content from stdin:
+
+    $ echo "@article{key, title={My Title}, author={John Doe}}" | bibfmt
+
 ## Installation
 
 Each release comes with attached binaries for windows, mac and linux. You can simply
-unpack the binary and place in a folder accessible by your terminal of choice.
+unpack the binaries (`doi2bib` and `bibfmt`) and place them in a folder accessible by your terminal of choice.
 
 ## Troubleshooting
 
@@ -87,7 +149,9 @@ If on macos you get a `Library not loaded: /usr/local/opt/gmp/lib/libgmp.10.dyli
 failure, you will need to install `gmp`. Macports users can do it via `port install gmp`
 and homebrew users via `breww install gmp`.
 
-## Zed configuration
+## Editor Integration
+
+### Zed configuration
 
 Use the following to use `bibfmt` as your bibtex formatter in [Zed](https://zed.dev):
 
@@ -103,11 +167,21 @@ Use the following to use `bibfmt` as your bibtex formatter in [Zed](https://zed.
 },
 ```
 
+Replace `/path/to/bibfmt` with the actual path to your `bibfmt` binary.
+
+### Other editors
+
+Since `bibfmt` reads from stdin and writes to stdout by default, it can be easily integrated
+with other editors that support external formatters. The tool will preserve the content
+if parsing errors are encountered, making it safe to use in automated workflows.
+
 ## Building instruction
 
-To build the package yourself, the most immediate way is tu use [opam](https://opam.ocaml.org/):
+To build the package yourself, the most immediate way is to use [opam](https://opam.ocaml.org/):
 
     $ opam install doi2bib
+
+This will install both `doi2bib` and `bibfmt` tools.
 
 To run the tests, clone this repository and from of the root of the project run
 
