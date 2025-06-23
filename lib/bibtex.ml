@@ -551,9 +551,9 @@ let escape_table =
   let escapes =
     List.map
       (fun s -> Re.compile @@ Re.str s)
-      [ "%2F"; "%28"; "%29"; "%3C"; "%3E"; "%3A"; "%3B" ]
+      [ "%2F"; "%28"; "%29"; "%3C"; "%3E"; "%3A"; "%3B"; "%3F"; "%26" ]
   in
-  let chars = [ "/"; "("; ")"; "<"; ">"; ":"; ";" ] in
+  let chars = [ "/"; "("; ")"; "<"; ">"; ":"; ";"; "?"; "&" ] in
   List.combine escapes chars
 
 let unescape_url s =
@@ -666,7 +666,9 @@ let format_entry entry =
         | [ last ] -> [ last ] (* No comma for the last item *)
         | content :: rest ->
             let comma_content =
-              if String.contains content '%' then content else content ^ ","
+              let trimmed = String.trim content in
+              if String.length trimmed > 0 && trimmed.[0] = '%' then content
+              else content ^ ","
             in
             comma_content :: add_commas_except_last rest
       in

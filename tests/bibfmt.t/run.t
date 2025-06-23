@@ -201,3 +201,139 @@ Test handling of entries with unquoted values like month abbreviations
     year    = 2023,
     month   = {jan}
   }
+
+Test URL unescaping in URL fields
+  $ cat > url_escaping.bib << EOF
+  > @article{URLEscapeTest,
+  >   title = "Test URL Unescaping",
+  >   author = "Test Author",
+  >   year = 2023,
+  >   url = "https://doi.org/10.1234%2Ftest%28example%29%3Cpath%3E%3Aport%3Bquery"
+  > }
+  > EOF
+
+  $ bibfmt -f url_escaping.bib
+  @article{URLEscapeTest,
+    title  = "Test URL Unescaping",
+    author = "Test Author",
+    year   = 2023,
+    url    = "https://doi.org/10.1234/test(example)<path>:port;query"
+  }
+
+Test URL unescaping with braced values
+  $ cat > url_braced.bib << EOF
+  > @article{URLBracedTest,
+  >   title = {Test URL Unescaping with Braces},
+  >   author = {Test Author},
+  >   year = 2023,
+  >   url = {https://example.com%2Fapi%28v1%29}
+  > }
+  > EOF
+
+  $ bibfmt -f url_braced.bib
+  @article{URLBracedTest,
+    title  = {Test URL Unescaping with Braces},
+    author = {Test Author},
+    year   = 2023,
+    url    = {https://example.com/api(v1)}
+  }
+
+Test that non-URL fields are not affected by URL unescaping
+  $ cat > non_url_fields.bib << EOF
+  > @article{NonURLTest,
+  >   title = "Title with %2F and %28 percent escapes",
+  >   author = "Author %29 with escapes",
+  >   note = "Note field %3A with various %3B escapes %3C here %3E",
+  >   year = 2023,
+  >   url = "https://example.com%2Fpath%28test%29"
+  > }
+  > EOF
+
+  $ bibfmt -f non_url_fields.bib
+  @article{NonURLTest,
+    title  = "Title with %2F and %28 percent escapes",
+    author = "Author %29 with escapes",
+    note   = "Note field %3A with various %3B escapes %3C here %3E",
+    year   = 2023,
+    url    = "https://example.com/path(test)"
+  }
+
+Test comma placement with percent characters in field values
+  $ cat > percent_comma.bib << EOF
+  > @article{PercentCommaTest,
+  >   title = "Field with %percent signs",
+  >   author = "Another %field with %signs",
+  >   journal = "Journal Name",
+  >   year = 2023
+  > }
+  > EOF
+
+  $ bibfmt -f percent_comma.bib
+  @article{PercentCommaTest,
+    title   = "Field with %percent signs",
+    author  = "Another %field with %signs",
+    journal = "Journal Name",
+    year    = 2023
+  }
+
+Test proper comma handling with comments and percent fields
+  $ cat > mixed_percent.bib << EOF
+  > @article{MixedPercentTest,
+  >   title = "Title with %signs",
+  >   % This is a comment that should not get a comma
+  >   author = "Author Name",
+  >   note = "Note with %more signs",
+  >   % Another comment
+  >   year = 2023,
+  >   url = "https://test.com%2Fpath"
+  > }
+  > EOF
+
+  $ bibfmt -f mixed_percent.bib
+  @article{MixedPercentTest,
+    title  = "Title with %signs",
+    % This is a comment that should not get a comma
+    author = "Author Name",
+    note   = "Note with %more signs",
+    % Another comment
+    year   = 2023,
+    url    = "https://test.com/path"
+  }
+
+Test URL field with mixed case (should still be unescaped)
+  $ cat > url_case.bib << EOF
+  > @article{URLCaseTest,
+  >   title = "Test URL Case Sensitivity",
+  >   author = "Test Author",
+  >   URL = "https://example.com%2FPATH%28TEST%29",
+  >   Url = "https://another.com%3Aport%2Fpath",
+  >   year = 2023
+  > }
+  > EOF
+
+  $ bibfmt -f url_case.bib
+  @article{URLCaseTest,
+    title  = "Test URL Case Sensitivity",
+    author = "Test Author",
+    URL    = "https://example.com/PATH(TEST)",
+    Url    = "https://another.com:port/path",
+    year   = 2023
+  }
+
+Test complex URL with all supported escape sequences
+  $ cat > url_complete.bib << EOF
+  > @article{URLCompleteTest,
+  >   title = "Complete URL Escape Test",
+  >   author = "Test Author",
+  >   year = 2023,
+  >   url = "https://dx.doi.org%2F10.1016%2Fj.example.2023.01.001%3Fref%26token%3Aabc%28def%29%3Cghi%3E%3Bjkl"
+  > }
+  > EOF
+
+  $ bibfmt -f url_complete.bib
+  @article{URLCompleteTest,
+    title  = "Complete URL Escape Test",
+    author = "Test Author",
+    year   = 2023,
+    url    = "https://dx.doi.org/10.1016/j.example.2023.01.001?ref&token:abc(def)<ghi>;jkl"
+  }
