@@ -87,6 +87,21 @@ If on macos you get a `Library not loaded: /usr/local/opt/gmp/lib/libgmp.10.dyli
 failure, you will need to install `gmp`. Macports users can do it via `port install gmp`
 and homebrew users via `breww install gmp`.
 
+## Zed configuration
+
+Use the following to use `bibfmt` as your bibtex formatter in [Zed](https://zed.dev):
+
+```json
+"languages": {
+  "BibTeX": {
+    "formatter": {
+      "external": {
+        "command": "/path/to/bibfmt"
+      }
+    }
+  }
+},
+```
 
 ## Building instruction
 
