@@ -9,4 +9,5 @@
 
 (rule
  (alias runtest)
- (action (run ./test_error_handling.exe)))
+ (action
+  (run ./test_error_handling.exe)))
