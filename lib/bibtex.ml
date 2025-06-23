@@ -31,6 +31,8 @@ type bibtex_entry = {
 }
 
 type bibtex_item = Entry of bibtex_entry | Comment of string
+type parse_error = { position : int; message : string }
+type parse_result = { items : bibtex_item list; errors : parse_error list }
 
 (* Utility functions *)
 let string_of_entry_type = function
@@ -88,6 +90,46 @@ let rec many p input pos =
       | Some (xs, pos'') -> Some (x :: xs, pos'')
       | None -> Some ([ x ], pos'))
   | None -> Some ([], pos)
+
+let many_with_errors p input pos =
+  let rec aux acc_items acc_errors curr_pos =
+    match p input curr_pos with
+    | Some (x, pos') -> aux (x :: acc_items) acc_errors pos'
+    | None ->
+        (* Try to skip to next entry by finding the next '@' character *)
+        let rec find_next_entry pos =
+          if pos >= String.length input then pos
+          else if input.[pos] = '@' then pos
+          else find_next_entry (pos + 1)
+        in
+        let next_pos = find_next_entry curr_pos in
+        if next_pos >= String.length input then
+          (* End of input *)
+          Some (List.rev acc_items, List.rev acc_errors, curr_pos)
+        else if next_pos = curr_pos then
+          (* We're at an '@' but couldn't parse, record error and skip *)
+          let error =
+            {
+              position = curr_pos;
+              message =
+                "Failed to parse entry starting at position "
+                ^ string_of_int curr_pos;
+            }
+          in
+          aux acc_items (error :: acc_errors) (next_pos + 1)
+        else
+          (* Found next '@', try parsing again *)
+          let error =
+            {
+              position = curr_pos;
+              message =
+                "Skipped unparseable content from position "
+                ^ string_of_int curr_pos ^ " to " ^ string_of_int next_pos;
+            }
+          in
+          aux acc_items (error :: acc_errors) next_pos
+  in
+  aux [] [] pos
 
 let many1 p =
   p >>= fun x ->
@@ -428,12 +470,33 @@ let bibtex_file =
   many (ws bibtex_item) >>= fun items ->
   ws (return ()) >>= fun _ -> return items
 
+let bibtex_file_with_errors input pos =
+  match many_with_errors (ws bibtex_item) input pos with
+  | Some (items, errors, final_pos) -> (
+      match ws (return ()) input final_pos with
+      | Some (_, end_pos) -> Some ({ items; errors }, end_pos)
+      | None -> Some ({ items; errors }, final_pos))
+  | None -> Some ({ items = []; errors = [] }, pos)
+
 (* Parser runner *)
 let parse_with parser input =
   match parser input 0 with Some (result, _) -> Some result | None -> None
 
 let parse_bibtex input =
   match parse_with bibtex_file input with Some items -> items | None -> []
+
+let parse_bibtex_with_errors input =
+  match parse_with bibtex_file_with_errors input with
+  | Some result -> result
+  | None ->
+      {
+        items = [];
+        errors = [ { position = 0; message = "Failed to parse BibTeX file" } ];
+      }
+
+let has_parse_errors result = result.errors <> []
+let get_parse_errors result = result.errors
+let get_parsed_items result = result.items
 
 (* String replacement helper for Unicode normalization *)
 let replace_string ~pattern ~replacement text =
