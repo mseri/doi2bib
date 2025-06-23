@@ -2,49 +2,12 @@ open Doi2bib
 
 let err s = `Error (false, s)
 
-(* Assumes "    url = { THE_URL }," is always well formed *)
-let url_re =
-  Re.compile
-    Re.(
-      seq
-        [
-          bol;
-          group (seq [ rep blank; str "url = {" ]);
-          group (rep (compl [ char '}' ]));
-          str "},";
-        ])
-
-let escape_table =
-  let escapes =
-    List.map
-      (fun s -> Re.compile @@ Re.str s)
-      [ "%2F"; "%28"; "%29"; "%3C"; "%3E"; "%3A"; "%3B" ]
-  in
-  let chars = [ "/"; "("; ")"; "<"; ">"; ":"; ";" ] in
-  List.combine escapes chars
-
-let unescape s =
-  List.fold_left
-    (fun s (re_code, chr) -> Re.replace_string ~all:true re_code ~by:chr s)
-    s escape_table
-
 let process_id outfile id =
   let open Lwt.Syntax in
   let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
-  let f grp =
-    let prefix = Re.Group.get grp 1 in
-    let url = Re.Group.get grp 2 in
-    String.concat "" [ prefix; unescape url; "}," ]
-  in
-  (* The doi produced by crossref contains %-escaped urls,
-     but %s are comments in bibtex/latex. This is perhaps a
-     brute way of dealing with it but it has been working
-     fine for me on a huge number of examples.
-     See https://github.com/mseri/doi2bib/issues/20 for context*)
-  let bibtex_out = Re.replace ~all:true url_re ~f bibtex in
 
   (* Parse and format the BibTeX *)
-  let parsed_items = Bibtex.parse_bibtex bibtex_out in
+  let parsed_items = Bibtex.parse_bibtex bibtex in
   let formatted =
     if List.length parsed_items = 0 then (
       Printf.eprintf
@@ -52,7 +15,7 @@ let process_id outfile id =
          Error: unable to parse the BibTeX entry for %s.\n\
          Please report this issue at github.com/mseri/doi2bib/issues"
         id;
-      bibtex_out)
+      bibtex)
     else
       (* Pretty print the BibTeX entries *)
       Bibtex.pretty_print_bibtex parsed_items
@@ -81,12 +44,6 @@ let process_file outfile infile =
     Lwt.catch
       (fun () ->
         let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
-        let f grp =
-          let prefix = Re.Group.get grp 1 in
-          let url = Re.Group.get grp 2 in
-          String.concat "" [ prefix; unescape url; "}," ]
-        in
-        let bibtex = Re.replace ~all:true url_re ~f bibtex in
         Buffer.add_string bibtex_buffer bibtex;
         Buffer.add_string bibtex_buffer "\n";
         Lwt.return_unit)

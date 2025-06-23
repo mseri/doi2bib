@@ -547,6 +547,20 @@ let replace_string ~pattern ~replacement text =
     find_and_replace 0 ""
 
 (* Normalize Unicode to ASCII equivalents where possible *)
+let escape_table =
+  let escapes =
+    List.map
+      (fun s -> Re.compile @@ Re.str s)
+      [ "%2F"; "%28"; "%29"; "%3C"; "%3E"; "%3A"; "%3B" ]
+  in
+  let chars = [ "/"; "("; ")"; "<"; ">"; ":"; ";" ] in
+  List.combine escapes chars
+
+let unescape_url s =
+  List.fold_left
+    (fun s (re_code, chr) -> Re.replace_string ~all:true re_code ~by:chr s)
+    s escape_table
+
 let normalize_unicode s =
   (* This is a simplified version that just handles a few common cases *)
   let replacements =
@@ -585,12 +599,33 @@ let format_field_value = function
       "{" ^ normalized_s ^ "}"
   | NumberValue n -> string_of_int n
 
+let format_field_value_with_url_unescaping field_name field_value =
+  (* Apply URL unescaping for url fields *)
+  if String.lowercase_ascii field_name = "url" then
+    match field_value with
+    | QuotedStringValue s ->
+        let unescaped_s = unescape_url s in
+        let normalized_s = normalize_unicode unescaped_s in
+        "\"" ^ normalized_s ^ "\""
+    | BracedStringValue s ->
+        let unescaped_s = unescape_url s in
+        let normalized_s = normalize_unicode unescaped_s in
+        "{" ^ normalized_s ^ "}"
+    | UnquotedStringValue s ->
+        let unescaped_s = unescape_url s in
+        let normalized_s = normalize_unicode unescaped_s in
+        "{" ^ normalized_s ^ "}"
+    | NumberValue n -> string_of_int n
+  else format_field_value field_value
+
 let format_field_with_padding field max_width =
   let padding = String.make (max_width - String.length field.name) ' ' in
-  "  " ^ field.name ^ padding ^ " = " ^ format_field_value field.value
+  "  " ^ field.name ^ padding ^ " = "
+  ^ format_field_value_with_url_unescaping field.name field.value
 
 let format_field field =
-  "  " ^ field.name ^ " = " ^ format_field_value field.value
+  "  " ^ field.name ^ " = "
+  ^ format_field_value_with_url_unescaping field.name field.value
 
 let format_entry_content_with_padding max_width = function
   | Field field -> format_field_with_padding field max_width
