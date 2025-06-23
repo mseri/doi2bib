@@ -14,17 +14,30 @@ let bibfmt file out =
     in
 
     read_input () >>= fun content ->
-    let parsed_items = Bibtex.parse_bibtex content in
+    let parse_result = Bibtex.parse_bibtex_with_errors content in
 
-    (* Pretty print the BibTeX entries *)
+    (* Check for parsing errors *)
     let formatted =
-      if parsed_items = [] then (
+      if Bibtex.has_parse_errors parse_result then (
+        Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
+        List.iter
+          (fun error ->
+            Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line
+              error.Bibtex.message)
+          (Bibtex.get_parse_errors parse_result);
         Printf.eprintf
-          "Warning: we are not able to pretty print the specified bibtex file \
-           please raise an issue at https://github.com/mseri/doi2bib/issues\n\
+          "Please check your BibTeX syntax or raise an issue at \
+           https://github.com/mseri/doi2bib/issues\n\
+           Returning unformatted content.\n\
            %!";
         content)
-      else Bibtex.pretty_print_bibtex parsed_items
+      else if parse_result.items = [] then (
+        Printf.eprintf
+          "Warning: No valid BibTeX entries found in the file. Please raise an \
+           issue at https://github.com/mseri/doi2bib/issues\n\
+           %!";
+        content)
+      else Bibtex.pretty_print_bibtex parse_result.items
     in
 
     (* Write the output *)

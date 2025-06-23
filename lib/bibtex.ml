@@ -31,7 +31,7 @@ type bibtex_entry = {
 }
 
 type bibtex_item = Entry of bibtex_entry | Comment of string
-type parse_error = { position : int; message : string }
+type parse_error = { line : int; position : int; message : string }
 type parse_result = { items : bibtex_item list; errors : parse_error list }
 
 (* Utility functions *)
@@ -92,6 +92,14 @@ let rec many p input pos =
   | None -> Some ([], pos)
 
 let many_with_errors p input pos =
+  let get_line_number pos =
+    let rec count_lines pos line_num =
+      if pos <= 0 then line_num
+      else if input.[pos - 1] = '\n' then count_lines (pos - 1) (line_num + 1)
+      else count_lines (pos - 1) line_num
+    in
+    count_lines pos 1
+  in
   let rec aux acc_items acc_errors curr_pos =
     match p input curr_pos with
     | Some (x, pos') -> aux (x :: acc_items) acc_errors pos'
@@ -110,10 +118,11 @@ let many_with_errors p input pos =
           (* We're at an '@' but couldn't parse, record error and skip *)
           let error =
             {
+              line = get_line_number curr_pos;
               position = curr_pos;
               message =
-                "Failed to parse entry starting at position "
-                ^ string_of_int curr_pos;
+                "Failed to parse entry starting at line "
+                ^ string_of_int (get_line_number curr_pos);
             }
           in
           aux acc_items (error :: acc_errors) (next_pos + 1)
@@ -121,10 +130,13 @@ let many_with_errors p input pos =
           (* Found next '@', try parsing again *)
           let error =
             {
+              line = get_line_number curr_pos;
               position = curr_pos;
               message =
-                "Skipped unparseable content from position "
-                ^ string_of_int curr_pos ^ " to " ^ string_of_int next_pos;
+                "Skipped unparseable content from line "
+                ^ string_of_int (get_line_number curr_pos)
+                ^ " to line "
+                ^ string_of_int (get_line_number next_pos);
             }
           in
           aux acc_items (error :: acc_errors) next_pos
@@ -491,7 +503,10 @@ let parse_bibtex_with_errors input =
   | None ->
       {
         items = [];
-        errors = [ { position = 0; message = "Failed to parse BibTeX file" } ];
+        errors =
+          [
+            { line = 1; position = 0; message = "Failed to parse BibTeX file" };
+          ];
       }
 
 let has_parse_errors result = result.errors <> []

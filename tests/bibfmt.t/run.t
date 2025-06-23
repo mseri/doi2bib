@@ -175,7 +175,10 @@ Test parsing of malformed BibTeX (should produce a warning but attempt to return
   > EOF
 
   $ bibfmt -f malformed.bib
-  Warning: we are not able to pretty print the specified bibtex file please raise an issue at https://github.com/mseri/doi2bib/issues
+  Warning: Found parsing errors in the BibTeX file:
+    - Line 1: Failed to parse entry starting at line 1
+  Please check your BibTeX syntax or raise an issue at https://github.com/mseri/doi2bib/issues
+  Returning unformatted content.
   @article{Malformed,
     title = "Incomplete entry without closing brace"
 

@@ -83,9 +83,9 @@ let test_error_details () =
   assert (List.length errors >= 1);
   List.iter
     (fun error ->
-      Printf.printf "Error at position %d: %s\n" error.Doi2bib.Bibtex.position
+      Printf.printf "Error at line %d: %s\n" error.Doi2bib.Bibtex.line
         error.message;
-      assert (error.position >= 0);
+      assert (error.line >= 1);
       assert (String.length error.message > 0))
     errors;
   Printf.printf "✓ Error details provided correctly\n"
