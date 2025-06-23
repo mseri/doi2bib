@@ -3,7 +3,12 @@
    https://claude.ai/share/6cdc04c1-ca20-4efc-93c2-474438dda8cf *)
 
 (* Types for representing BibTeX entries *)
-type field_value = StringValue of string | NumberValue of int
+type field_value =
+  | QuotedStringValue of string
+  | BracedStringValue of string
+  | UnquotedStringValue of string
+  | NumberValue of int
+
 type field = { name : string; value : field_value }
 
 type entry_type =
@@ -325,10 +330,10 @@ let unquoted_value = take_while1 is_unquoted_value_char
 (* Enhanced field_value parser that can handle unquoted values like month=jul *)
 let field_value =
   quoted_string
-  >>= (fun s -> return (StringValue s))
-  <|> (braced_string >>= fun s -> return (StringValue s))
+  >>= (fun s -> return (QuotedStringValue s))
+  <|> (braced_string >>= fun s -> return (BracedStringValue s))
   <|> (number >>= fun n -> return (NumberValue n))
-  <|> (unquoted_value >>= fun s -> return (StringValue s))
+  <|> (unquoted_value >>= fun s -> return (UnquotedStringValue s))
 
 let field_entry =
   ws field_name >>= fun name ->
@@ -569,11 +574,15 @@ let normalize_unicode s =
 
 (* Pretty printer *)
 let format_field_value = function
-  | StringValue s ->
-      (* Use braces if the string contains quotes, otherwise use quotes *)
+  | QuotedStringValue s ->
       let normalized_s = normalize_unicode s in
-      if String.contains normalized_s '"' then "{" ^ normalized_s ^ "}"
-      else "\"" ^ normalized_s ^ "\""
+      "\"" ^ normalized_s ^ "\""
+  | BracedStringValue s ->
+      let normalized_s = normalize_unicode s in
+      "{" ^ normalized_s ^ "}"
+  | UnquotedStringValue s ->
+      let normalized_s = normalize_unicode s in
+      "{" ^ normalized_s ^ "}"
   | NumberValue n -> string_of_int n
 
 let format_field field =

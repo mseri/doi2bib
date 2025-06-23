@@ -45,17 +45,17 @@ Test formatting BibTeX with braces instead of quotes
 
   $ bibfmt -f braces.bib
   @article{Albert_1989,
-    title = "Le théorème de réduction de Marsden-Weinstein en géométrie cosymplectique et de contact",
-    volume = "6",
-    ISSN = "0393-0440",
-    url = "http://dx.doi.org/10.1016/0393-0440(89)90029-6",
-    DOI = "10.1016/0393-0440(89)90029-6",
-    number = "4",
-    journal = "Journal of Geometry and Physics",
-    publisher = "Elsevier BV",
-    author = "Albert, Claude",
-    year = "1989",
-    pages = "627-649"
+    title = {Le théorème de réduction de Marsden-Weinstein en géométrie cosymplectique et de contact},
+    volume = {6},
+    ISSN = {0393-0440},
+    url = {http://dx.doi.org/10.1016/0393-0440(89)90029-6},
+    DOI = {10.1016/0393-0440(89)90029-6},
+    number = {4},
+    journal = {Journal of Geometry and Physics},
+    publisher = {Elsevier BV},
+    author = {Albert, Claude},
+    year = {1989},
+    pages = {627-649}
   }
 
 Test writing to output file
@@ -199,5 +199,5 @@ Test handling of entries with unquoted values like month abbreviations
     author = "Some Author",
     journal = "Some Journal",
     year = 2023,
-    month = "jan"
+    month = {jan}
   }
