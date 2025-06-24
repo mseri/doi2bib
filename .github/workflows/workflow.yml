@@ -82,9 +82,15 @@ jobs:
           opam depext tls decompress
           opam install tls decompress
 
-      - name: Build project
+      - name: Build bibfmt project
         run: |
-          opam install --deps-only .
+          opam install --deps-only bibfmt
+          opam exec -- dune build -p bibfmt
+          opam exec -- dune install bibfmt
+
+      - name: Build doi2bib project
+        run: |
+          opam install --deps-only doi2bib
           opam exec -- dune build -p doi2bib
 
       - name: Check code formatting
@@ -98,21 +104,32 @@ jobs:
       #   if: ${{ !startsWith(github.ref, 'refs/tags/') }}
       #   run: opam exec -- dune runtest
 
-      - name: Build
-        run: opam exec -- dune build -p doi2bib
+      # - name: Build
+      #   run: opam exec -- dune build -p doi2bib
 
-      - name: Create release archive
+      - name: Create doi2bib release archive
         if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(runner.os, 'Win') }}
-        run: opam exec -- tar czf doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz -C _build/default/bin/ doi2bib.exe
+        run: opam exec -- tar czf doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz -C _build/default/doi2bib/bin/ doi2bib.exe
 
-      - name: Create release archive (Windows)
+      - name: Create bibfmt release archive
+        if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(runner.os, 'Win') }}
+        run: opam exec -- tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz -C _build/default/bibfmt/bin/ bibfmt.exe
+
+      - name: Create doi2bib release archive (Windows)
         if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(runner.os, 'Win') }}
         run: |
           opam exec -- dos2unix .github/scripts/win.sh
           opam exec -- bash .github/scripts/win.sh
           opam exec -- tar czf doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz out/
 
-      - name: Upload build artifact
+      - name: Create bibfmt release archive (Windows)
+        if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(runner.os, 'Win') }}
+        run: |
+          mkdir bibfmt-out
+          cp _build/default/bibfmt/bin/bibfmt.exe bibfmt-out/
+          opam exec -- tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz bibfmt-out/
+
+      - name: Upload doi2bib build artifact
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
         with:
@@ -120,14 +137,24 @@ jobs:
           name: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
           if-no-files-found: error
 
-      - name: Upload release tarball
+      - name: Upload bibfmt build artifact
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          path: bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
+          name: bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
+          if-no-files-found: error
+
+      - name: Upload release tarballs
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         id: upload-release-asset
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
+          files: |
+            doi2bib-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
+            bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz
 
   nix-build:
     needs: create_draft_release
@@ -142,8 +169,11 @@ jobs:
           extra_nix_config: |
             extra-substituters = https://anmonteiro.nix-cache.workers.dev
             extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=
-      - name: "Run nix-build"
+      - name: "Run nix-build doi2bib"
         run: nix build -L .#${{ matrix.platform }}
+
+      - name: "Run nix-build bibfmt"
+        run: nix build -L .#bibfmt-${{ matrix.platform }} -o result-bibfmt-${{ matrix.platform }}
 
       - name: Prepare env
         if: ${{ success() }}
@@ -155,11 +185,15 @@ jobs:
             echo "ARCH=arm64" >> $GITHUB_ENV
           fi
 
-      - name: Create release archive
+      - name: Create doi2bib release archive
         if: ${{ success() }}
         run: tar czf doi2bib-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz -C ./result/bin doi2bib
 
-      - name: Upload build artifact
+      - name: Create bibfmt release archive
+        if: ${{ success() }}
+        run: tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz -C ./result-bibfmt-${{ matrix.platform }}/bin bibfmt
+
+      - name: Upload doi2bib build artifact
         if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
         with:
@@ -167,11 +201,21 @@ jobs:
           name: doi2bib-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
           if-no-files-found: error
 
-      - name: Upload release tarball
+      - name: Upload bibfmt build artifact
+        if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          path: bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
+          name: bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
+          if-no-files-found: error
+
+      - name: Upload release tarballs
         if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
         id: upload-release-asset
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: doi2bib-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
+          files: |
+            doi2bib-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz
+            bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz

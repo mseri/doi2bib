@@ -9,28 +9,20 @@
 with ocamlPackages;
 
 buildDunePackage {
-  pname = "doi2bib";
+  pname = "bibfmt";
   version = "n/a";
   src = with nix-filter; filter {
     root = ./..;
     include = [
       "dune-project"
-      "doi2bib.opam"
-      "doi2bib"
+      "bibfmt.opam"
       "bibfmt"
     ];
   };
 
   OCAMLFIND_TOOLCHAIN = crossName;
   propagatedBuildInputs = [
-    astring
-    cohttp-lwt-unix
     cmdliner
-    clz
-    ezxmlm
-    lwt
-    bigstringaf
-    tls
     re
   ];
 
@@ -39,10 +31,10 @@ buildDunePackage {
       ${if static then "static" else "release"} build\
       ${if crossName != null then "for ${crossName}" else ""}"
 
-    dune build doi2bib/bin/doi2bib.exe -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
+    dune build bibfmt/bin/bibfmt.exe -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
   '';
   installPhase = ''
     mkdir -p $out/bin
-    mv _build/default/doi2bib/bin/doi2bib.exe $out/bin/doi2bib
+    mv _build/default/bibfmt/bin/bibfmt.exe $out/bin/bibfmt
   '';
 }
