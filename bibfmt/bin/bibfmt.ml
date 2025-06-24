@@ -1,19 +1,17 @@
-open Doi2bib
-
 let err s = `Error (false, s)
 
 let bibfmt file out =
-  let main =
-    let open Lwt.Infix in
+  let main () =
     let file = if file = "" then "stdin" else file in
 
     (* Read the input from the specified file or stdin *)
     let read_input () =
-      if file = "stdin" then Lwt_io.read Lwt_io.stdin
-      else Lwt_io.with_file ~mode:Lwt_io.Input file (fun ic -> Lwt_io.read ic)
+      let open In_channel in
+      if file = "stdin" then input_all stdin
+      else with_open_text file (fun ic -> input_all ic)
     in
 
-    read_input () >>= fun content ->
+    let content = read_input () in
     let parse_result = Bibtex.parse_bibtex_with_errors content in
 
     (* Check for parsing errors *)
@@ -22,8 +20,7 @@ let bibfmt file out =
         Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
         List.iter
           (fun error ->
-            Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line
-              error.Bibtex.message)
+            Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line error.message)
           (Bibtex.get_parse_errors parse_result);
         Printf.eprintf
           "Please check your BibTeX syntax or raise an issue at \
@@ -42,14 +39,14 @@ let bibfmt file out =
 
     (* Write the output *)
     match out with
-    | "stdout" -> Lwt_io.print formatted
+    | "stdout" -> print_string formatted
     | _ ->
-        Lwt_io.with_file ~mode:Lwt_io.Output out (fun oc ->
-            Lwt_io.write oc formatted)
+        Out_channel.(with_open_text out (fun oc -> output_string oc formatted))
   in
-  match Lwt_main.run main with
-  | () -> `Ok ()
-  | exception e -> err @@ Printexc.to_string e
+  try
+    main ();
+    `Ok ()
+  with e -> err @@ Printexc.to_string e
 
 let () =
   let open Cmdliner in

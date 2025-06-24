@@ -1,0 +1,5 @@
+(executable
+ (name doi2bib)
+ (public_name doi2bib)
+ (libraries bibtex cmdliner doi2bib re lwt unix)
+ (preprocess future_syntax))

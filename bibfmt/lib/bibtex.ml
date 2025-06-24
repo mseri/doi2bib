@@ -138,7 +138,7 @@ let many_with_errors p input pos =
               line = get_line_number curr_pos;
               position = curr_pos;
               message =
-                "Skipped unparseable content from line "
+                "Skipped unparsable content from line "
                 ^ string_of_int (get_line_number curr_pos)
                 ^ " to line "
                 ^ string_of_int (get_line_number next_pos);

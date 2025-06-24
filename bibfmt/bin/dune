@@ -1,0 +1,4 @@
+(executable
+ (name bibfmt)
+ (public_name bibfmt)
+ (libraries cmdliner bibtex unix))

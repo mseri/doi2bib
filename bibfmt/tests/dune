@@ -1,0 +1,7 @@
+(cram
+ (applies_to :whole_subtree)
+ (deps %{bin:bibfmt}))
+
+(test
+ (name test_error_handling)
+ (libraries bibtex))

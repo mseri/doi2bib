@@ -7,10 +7,10 @@ let test_valid_bibtex () =
   author = {John Doe}
 }|}
   in
-  let result = Doi2bib.Bibtex.parse_bibtex_with_errors input in
+  let result = Bibtex.parse_bibtex_with_errors input in
   assert (List.length result.items = 1);
   assert (List.length result.errors = 0);
-  assert (not (Doi2bib.Bibtex.has_parse_errors result));
+  assert (not (Bibtex.has_parse_errors result));
   Printf.printf "✓ Valid BibTeX parsed correctly\n"
 
 let test_malformed_bibtex () =
@@ -29,14 +29,14 @@ let test_malformed_bibtex () =
   author = {Bob Wilson}
 }|}
   in
-  let result = Doi2bib.Bibtex.parse_bibtex_with_errors input in
+  let result = Bibtex.parse_bibtex_with_errors input in
   Printf.printf "Parsed %d items with %d errors\n" (List.length result.items)
     (List.length result.errors);
   assert (List.length result.items >= 1);
   (* Should parse at least some valid entries *)
   assert (List.length result.errors >= 1);
   (* Should have at least one error *)
-  assert (Doi2bib.Bibtex.has_parse_errors result);
+  assert (Bibtex.has_parse_errors result);
   Printf.printf "✓ Malformed BibTeX handled correctly\n"
 
 let test_completely_invalid_input () =
@@ -46,7 +46,7 @@ Just some random text.
 @invalid_entry_without_proper_format
 More random content.|}
   in
-  let result = Doi2bib.Bibtex.parse_bibtex_with_errors input in
+  let result = Bibtex.parse_bibtex_with_errors input in
   Printf.printf "Completely invalid input: %d items, %d errors\n"
     (List.length result.items)
     (List.length result.errors);
@@ -63,8 +63,8 @@ let test_backward_compatibility () =
   author = {Test Author}
 }|}
   in
-  let old_result = Doi2bib.Bibtex.parse_bibtex input in
-  let new_result = Doi2bib.Bibtex.parse_bibtex_with_errors input in
+  let old_result = Bibtex.parse_bibtex input in
+  let new_result = Bibtex.parse_bibtex_with_errors input in
   assert (List.length old_result = List.length new_result.items);
   assert (List.length new_result.errors = 0);
   Printf.printf "✓ Backward compatibility maintained\n"
@@ -78,13 +78,12 @@ let test_error_details () =
 @article{malformed
   title = {Missing closing brace}|}
   in
-  let result = Doi2bib.Bibtex.parse_bibtex_with_errors input in
-  let errors = Doi2bib.Bibtex.get_parse_errors result in
+  let result = Bibtex.parse_bibtex_with_errors input in
+  let errors = Bibtex.get_parse_errors result in
   assert (List.length errors >= 1);
   List.iter
     (fun error ->
-      Printf.printf "Error at line %d: %s\n" error.Doi2bib.Bibtex.line
-        error.message;
+      Printf.printf "Error at line %d: %s\n" error.Bibtex.line error.message;
       assert (error.line >= 1);
       assert (String.length error.message > 0))
     errors;
