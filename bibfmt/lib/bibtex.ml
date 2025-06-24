@@ -157,7 +157,6 @@ let optional p input pos =
   | Some (x, pos') -> Some (Some x, pos')
   | None -> Some (None, pos)
 
-(* Character and string parsers *)
 let peek_char input pos =
   if pos < String.length input then Some input.[pos] else None
 
@@ -176,12 +175,14 @@ let rec skip_while pred input pos =
   | Some c when pred c -> skip_while pred input (pos + 1)
   | _ -> pos
 
+(* Helper function to skip whitespace and return new position *)
+let skip_whitespace input pos =
+  skip_while
+    (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
+    input pos
+
 let whitespace input pos =
-  let pos' =
-    skip_while
-      (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-      input pos
-  in
+  let pos' = skip_whitespace input pos in
   Some ((), pos')
 
 let ws p =
@@ -392,30 +393,17 @@ let entry_content_parser input pos =
 
 (* Whitespace parser that collects comments within entries *)
 let ws_with_comments p input pos =
-  let pos' =
-    skip_while
-      (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-      input pos
-  in
+  let pos' = skip_whitespace input pos in
   match p input pos' with
   | Some (x, pos'') ->
-      let pos''' =
-        skip_while
-          (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-          input pos''
-      in
+      let pos''' = skip_whitespace input pos'' in
       Some (x, pos''')
   | None -> None
 
 (* Parse the contents of an entry - both fields and comments *)
 let entry_contents_parser input pos =
   let parse_item input pos =
-    (* Skip whitespace *)
-    let pos_after_ws =
-      skip_while
-        (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-        input pos
-    in
+    let pos_after_ws = skip_whitespace input pos in
     (* Try to parse a comment first *)
     match entry_comment_parser input pos_after_ws with
     | Some (comment, pos') -> Some (comment, pos')
@@ -426,12 +414,7 @@ let entry_contents_parser input pos =
         | None -> None)
   in
   let rec parse_contents acc input pos =
-    (* Skip whitespace *)
-    let pos_after_ws =
-      skip_while
-        (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-        input pos
-    in
+    let pos_after_ws = skip_whitespace input pos in
     (* Check for end of entry *)
     match peek_char input pos_after_ws with
     | Some '}' ->
@@ -445,13 +428,9 @@ let entry_contents_parser input pos =
         match parse_item input pos_after_ws with
         | Some (item, pos') ->
             (* Got an item, look for comma or end *)
-            let pos_after_ws2 =
-              skip_while
-                (function ' ' | '\t' | '\n' | '\r' -> true | _ -> false)
-                input pos'
-            in
+            let pos_after_ws' = skip_whitespace input pos' in
             (* Continue parsing with this item added *)
-            parse_contents (item :: acc) input pos_after_ws2
+            parse_contents (item :: acc) input pos_after_ws'
         | None -> (
             (* No valid item found, check if we're at the end *)
             match peek_char input pos_after_ws with
@@ -468,7 +447,6 @@ let bibtex_entry =
   entry_type_parser >>= fun entry_type ->
   ws (char '{') >>= fun _ ->
   ws identifier >>= fun citekey ->
-  (* Parse optional comma *)
   optional (ws (char ',')) >>= fun _ ->
   (* Parse contents (fields and comments) *)
   entry_contents_parser >>= fun contents ->
@@ -600,7 +578,6 @@ let format_field_value = function
   | NumberValue n -> string_of_int n
 
 let format_field_value_with_url_unescaping field_name field_value =
-  (* Apply URL unescaping for url fields *)
   if String.lowercase_ascii field_name = "url" then
     match field_value with
     | QuotedStringValue s ->

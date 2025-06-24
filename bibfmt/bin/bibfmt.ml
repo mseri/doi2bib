@@ -4,7 +4,6 @@ let bibfmt file out =
   let main () =
     let file = if file = "" then "stdin" else file in
 
-    (* Read the input from the specified file or stdin *)
     let read_input () =
       let open In_channel in
       if file = "stdin" then input_all stdin
@@ -14,7 +13,6 @@ let bibfmt file out =
     let content = read_input () in
     let parse_result = Bibtex.parse_bibtex_with_errors content in
 
-    (* Check for parsing errors *)
     let formatted =
       if Bibtex.has_parse_errors parse_result then (
         Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
@@ -37,7 +35,6 @@ let bibfmt file out =
       else Bibtex.pretty_print_bibtex parse_result.items
     in
 
-    (* Write the output *)
     match out with
     | "stdout" -> print_string formatted
     | _ ->
