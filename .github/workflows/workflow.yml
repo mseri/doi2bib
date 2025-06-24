@@ -86,11 +86,6 @@ jobs:
           opam exec -- dune build -p bibfmt
           opam exec -- dune install bibfmt
 
-      - name: Build doi2bib project
-        run: |
-          opam install --deps-only doi2bib
-          opam exec -- dune build -p doi2bib
-
       - name: Create bibfmt release archive
         if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(runner.os, 'Win') }}
         run: tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz -C _build/default/bibfmt/bin/ bibfmt.exe
@@ -114,6 +109,11 @@ jobs:
 
       # - name: Build
       #   run: opam exec -- dune build -p doi2bib
+
+      - name: Build doi2bib project
+        run: |
+          opam install --deps-only doi2bib
+          opam exec -- dune build -p doi2bib
 
       - name: Create doi2bib release archive
         if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(runner.os, 'Win') }}
