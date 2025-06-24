@@ -75,10 +75,10 @@ let entry_type_of_string s =
   | _ -> Misc (* fallback to misc for unknown types *)
 
 (* Simple Parser Combinator Library *)
-type 'a parser = string -> int -> ('a * int) option
+(* type 'a parser = string -> int -> ('a * int) option *)
 
 let return x _input pos = Some (x, pos)
-let fail _input _pos = None
+(* let fail _input _pos = None *)
 
 let bind p f input pos =
   match p input pos with Some (x, pos') -> f x input pos' | None -> None
@@ -148,9 +148,9 @@ let many_with_errors p input pos =
   in
   aux [] [] pos
 
-let many1 p =
+(* let many1 p =
   p >>= fun x ->
-  many p >>= fun xs -> return (x :: xs)
+  many p >>= fun xs -> return (x :: xs) *)
 
 let optional p input pos =
   match p input pos with
@@ -190,11 +190,11 @@ let ws p =
   p >>= fun x ->
   whitespace >>= fun _ -> return x
 
-let string s input pos =
+(* let string s input pos =
   let len = String.length s in
   if pos + len <= String.length input && String.sub input pos len = s then
     Some (s, pos + len)
-  else None
+  else None *)
 
 let take_while pred input pos =
   let start = pos in
@@ -366,22 +366,22 @@ let entry_comment_parser input pos =
   | None -> None
 
 (* Parse either a field or a comment within an entry *)
-let entry_content_parser input pos =
+(* let entry_content_parser input pos =
   match entry_comment_parser input pos with
   | Some result -> Some result
   | None -> (
       match field_entry input pos with
       | Some (field, pos') -> Some (Field field, pos')
-      | None -> None)
+      | None -> None) *)
 
 (* Whitespace parser that collects comments within entries *)
-let ws_with_comments p input pos =
+(* let ws_with_comments p input pos =
   let pos' = skip_whitespace input pos in
   match p input pos' with
   | Some (x, pos'') ->
       let pos''' = skip_whitespace input pos'' in
       Some (x, pos''')
-  | None -> None
+  | None -> None *)
 
 (* Parse the contents of an entry - both fields and comments *)
 let entry_contents_parser input pos =
