@@ -337,3 +337,89 @@ Test complex URL with all supported escape sequences
     year   = 2023,
     url    = "https://dx.doi.org/10.1016/j.example.2023.01.001?ref&token:abc(def)<ghi>;jkl"
   }
+
+Test UTF-8 multi-byte characters in quoted strings
+  $ cat > utf8_quoted.bib << EOF
+  > @article{UTF8QuotedTest,
+  >   title = "Étude des caractères spéciaux: café, naïve, résumé",
+  >   author = "Müller, João and García, José",
+  >   journal = "Revue Française de Physique",
+  >   year = 2023,
+  >   note = "Testing UTF-8: ñoël, αβγδε, 中文, русский, العربية"
+  > }
+  > EOF
+
+  $ bibfmt -f utf8_quoted.bib
+  @article{UTF8QuotedTest,
+    title   = "Étude des caractères spéciaux: café, naïve, résumé",
+    author  = "Müller, João and García, José",
+    journal = "Revue Française de Physique",
+    year    = 2023,
+    note    = "Testing UTF-8: ñoël, αβγδε, 中文, русский, العربية"
+  }
+
+Test UTF-8 multi-byte characters in braced strings
+  $ cat > utf8_braced.bib << EOF
+  > @book{UTF8BracedTest,
+  >   title = {Αρχαία Ελληνικά: Ancient Greek Text},
+  >   author = {日本語の著者 and Автор на русском},
+  >   publisher = {Издательство Unicode},
+  >   isbn = {978-3-16-148410-0},
+  >   year = {2023},
+  >   note = {Mix of scripts: English, Español, Français, Deutsch, العربية, 中文, 日本語, Русский, Ελληνικά}
+  > }
+  > EOF
+
+  $ bibfmt -f utf8_braced.bib
+  @book{UTF8BracedTest,
+    title     = {Αρχαία Ελληνικά: Ancient Greek Text},
+    author    = {日本語の著者 and Автор на русском},
+    publisher = {Издательство Unicode},
+    isbn      = {978-3-16-148410-0},
+    year      = {2023},
+    note      = {Mix of scripts: English, Español, Français, Deutsch, العربية, 中文, 日本語, Русский, Ελληνικά}
+  }
+
+Test UTF-8 characters of different byte lengths
+  $ cat > utf8_lengths.bib << EOF
+  > @misc{UTF8LengthsTest,
+  >   title = "UTF-8 byte length test: à (2-byte), € (3-byte), 𝕌 (4-byte)",
+  >   author = "Unicode Specialist",
+  >   howpublished = "Various lengths: ñ, ∑, 𝒯, 𝔘, 𝕟, 𝖎, 𝗰, 𝘰, 𝙙, 𝚎",
+  >   year = 2023,
+  >   note = "Emoji test: 🚀 🌟 📚 🔬 💡 🎯"
+  > }
+  > EOF
+
+  $ bibfmt -f utf8_lengths.bib
+  @misc{UTF8LengthsTest,
+    title        = "UTF-8 byte length test: à (2-byte), € (3-byte), 𝕌 (4-byte)",
+    author       = "Unicode Specialist",
+    howpublished = "Various lengths: ñ, ∑, 𝒯, 𝔘, 𝕟, 𝖎, 𝗰, 𝘰, 𝙙, 𝚎",
+    year         = 2023,
+    note         = "Emoji test: 🚀 🌟 📚 🔬 💡 🎯"
+  }
+
+Test mixed UTF-8 with BibTeX special characters and escapes
+  $ cat > utf8_mixed.bib << EOF
+  > @inproceedings{UTF8MixedTest,
+  >   title = "Título español with \"quotes\" and {braces}",
+  >   author = "Sánchez, María and O'Connor, Seán",
+  >   booktitle = {Proceedings of the 文献学 Conference on "Advanced Topics"},
+  >   pages = "123--456",
+  >   year = 2023,
+  >   note = "Special: \&, \%, \$, plus UTF-8: café, résumé, naïve, piñata",
+  >   publisher = "Éditions Académiques & Co."
+  > }
+  > EOF
+
+  $ bibfmt -f utf8_mixed.bib
+  @inproceedings{UTF8MixedTest,
+    title     = "Título español with \"quotes\" and {braces}",
+    author    = "Sánchez, María and O'Connor, Seán",
+    booktitle = {Proceedings of the 文献学 Conference on "Advanced Topics"},
+    pages     = "123--456",
+    year      = 2023,
+    note      = "Special: \&, \%, $, plus UTF-8: café, résumé, naïve, piñata",
+    publisher = "Éditions Académiques & Co."
+  }

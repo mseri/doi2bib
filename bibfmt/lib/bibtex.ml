@@ -234,6 +234,27 @@ let is_utf8_continuation_byte c =
   let code = Char.code c in
   code >= 0x80 && code <= 0xBF
 
+(* Helper function to collect UTF-8 multi-byte character sequence *)
+let collect_utf8_sequence input pos start_char =
+  let rec collect_utf8 bytes_left acc_utf8 curr_pos =
+    if bytes_left = 0 then (acc_utf8, curr_pos)
+    else
+      match peek_char input curr_pos with
+      | Some c when is_utf8_continuation_byte c ->
+          collect_utf8 (bytes_left - 1)
+            (acc_utf8 ^ String.make 1 c)
+            (curr_pos + 1)
+      | _ -> (acc_utf8, curr_pos)
+  in
+  let bytes_to_read =
+    let code = Char.code start_char in
+    if code >= 0xC0 && code <= 0xDF then 1
+    else if code >= 0xE0 && code <= 0xEF then 2
+    else if code >= 0xF0 && code <= 0xF7 then 3
+    else 0
+  in
+  collect_utf8 bytes_to_read (String.make 1 start_char) (pos + 1)
+
 let quoted_string input pos =
   match char '"' input pos with
   | Some (_, pos1) ->
@@ -249,26 +270,7 @@ let quoted_string input pos =
         | Some c ->
             (* Check if this is a UTF-8 multi-byte character *)
             if Char.code c >= 0xC0 then
-              (* Leading byte of multi-byte sequence *)
-              let rec collect_utf8 bytes_left acc_utf8 curr_pos =
-                if bytes_left = 0 then (acc_utf8, curr_pos)
-                else
-                  match peek_char input curr_pos with
-                  | Some c when is_utf8_continuation_byte c ->
-                      collect_utf8 (bytes_left - 1)
-                        (acc_utf8 ^ String.make 1 c)
-                        (curr_pos + 1)
-                  | _ -> (acc_utf8, curr_pos)
-              in
-              let bytes_to_read =
-                if Char.code c >= 0xC0 && Char.code c <= 0xDF then 1
-                else if Char.code c >= 0xE0 && Char.code c <= 0xEF then 2
-                else if Char.code c >= 0xF0 && Char.code c <= 0xF7 then 3
-                else 0
-              in
-              let utf8_seq, new_pos =
-                collect_utf8 bytes_to_read (String.make 1 c) (pos + 1)
-              in
+              let utf8_seq, new_pos = collect_utf8_sequence input pos c in
               loop (acc ^ utf8_seq) new_pos brace_level
             else
               (* ASCII or continuation byte (shouldn't happen here) *)
@@ -292,26 +294,7 @@ let braced_string input pos =
         | Some c ->
             (* Check if this is a UTF-8 multi-byte character *)
             if Char.code c >= 0xC0 then
-              (* Leading byte of multi-byte sequence *)
-              let rec collect_utf8 bytes_left acc_utf8 curr_pos =
-                if bytes_left = 0 then (acc_utf8, curr_pos)
-                else
-                  match peek_char input curr_pos with
-                  | Some c when is_utf8_continuation_byte c ->
-                      collect_utf8 (bytes_left - 1)
-                        (acc_utf8 ^ String.make 1 c)
-                        (curr_pos + 1)
-                  | _ -> (acc_utf8, curr_pos)
-              in
-              let bytes_to_read =
-                if Char.code c >= 0xC0 && Char.code c <= 0xDF then 1
-                else if Char.code c >= 0xE0 && Char.code c <= 0xEF then 2
-                else if Char.code c >= 0xF0 && Char.code c <= 0xF7 then 3
-                else 0
-              in
-              let utf8_seq, new_pos =
-                collect_utf8 bytes_to_read (String.make 1 c) (pos + 1)
-              in
+              let utf8_seq, new_pos = collect_utf8_sequence input pos c in
               loop (acc ^ utf8_seq) new_pos brace_level
             else
               (* ASCII or continuation byte (shouldn't happen here) *)
