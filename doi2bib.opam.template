@@ -1,5 +1,5 @@
 depends: [
-  "dune" {>= "2.7"}
+  "dune" {>= "2.8"}
   "ocaml" {>= "4.08"}
   "bibfmt" {= version}
   "astring" {>= "0.8.0"}
