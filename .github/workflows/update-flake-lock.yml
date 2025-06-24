@@ -1,0 +1,84 @@
+name: Update flake.lock
+
+on:
+  schedule:
+    # Run every 2 months on the 1st at 2 AM UTC
+    - cron: '0 2 1 */2 *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-flake-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            extra-substituters = https://anmonteiro.nix-cache.workers.dev
+            extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Test builds
+        run: |
+          echo "Testing doi2bib native build..."
+          nix build -L .#native
+
+          echo "Testing bibfmt native build..."
+          nix build -L .#bibfmt-native
+
+          echo "Testing musl builds..."
+          nix build -L .#musl
+          nix build -L .#bibfmt-musl
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet flake.lock; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to flake.lock"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "flake.lock has been updated"
+          fi
+
+      - name: Get current date
+        if: steps.changes.outputs.changed == 'true'
+        id: date
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update flake.lock (${{ steps.date.outputs.date }})"
+          title: "chore: update flake.lock (${{ steps.date.outputs.date }})"
+          body: |
+            This PR updates `flake.lock` to the latest versions of all dependencies.
+
+            **Changes:**
+            - Updated Nix flake dependencies
+            - All builds tested successfully
+
+            **Automated checks performed:**
+            - ✅ doi2bib native build
+            - ✅ bibfmt native build
+            - ✅ musl builds
+
+            Generated automatically by the update-flake-lock workflow.
+
+            Please review the changes and merge if everything looks good.
+          branch: update-flake-lock-${{ steps.date.outputs.date }}
+          branch-suffix: short-commit-hash
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
