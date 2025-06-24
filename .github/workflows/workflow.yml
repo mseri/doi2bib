@@ -87,11 +87,13 @@ jobs:
           opam install --deps-only bibfmt
           opam exec -- dune build -p bibfmt
           opam exec -- dune install bibfmt
+          ls _build/default/bibfmt/bin/
 
       - name: Build doi2bib project
         run: |
           opam install --deps-only doi2bib
           opam exec -- dune build -p doi2bib
+          ls _build/default/doi2bib/bin/
 
       - name: Check code formatting
         if: ${{ success() && startsWith(runner.os, 'Linux') }}

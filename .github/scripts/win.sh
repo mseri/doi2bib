@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-dir="_build/default/bin"
+dir="_build/default/doi2bib/bin"
 OUTPUT="out"
 mkdir "$OUTPUT"
 for exe in "$dir/"*.exe ; do
