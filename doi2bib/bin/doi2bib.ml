@@ -6,7 +6,6 @@ let process_id outfile id =
   let open Lwt.Syntax in
   let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
 
-  (* Parse and format the BibTeX *)
   let parsed_items = Bibtex.parse_bibtex bibtex in
   let formatted =
     if List.length parsed_items = 0 then (
@@ -16,12 +15,9 @@ let process_id outfile id =
          Please report this issue at github.com/mseri/doi2bib/issues"
         id;
       bibtex)
-    else
-      (* Pretty print the BibTeX entries *)
-      Bibtex.pretty_print_bibtex parsed_items
+    else Bibtex.pretty_print_bibtex parsed_items
   in
 
-  (* Write the output *)
   match outfile with
   | "stdout" -> Lwt_io.print formatted
   | outfile ->
