@@ -1,4 +1,5 @@
 (executable
  (name bibfmt)
  (public_name bibfmt)
- (libraries cmdliner bibtex unix))
+ (libraries cmdliner bibfmt unix)
+ (package bibfmt))

@@ -1,3 +1,4 @@
 (library
  (name bibtex)
+ (public_name bibfmt)
  (libraries re))

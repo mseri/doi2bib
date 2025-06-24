@@ -1,4 +1,4 @@
-(lang dune 2.7)
+(lang dune 2.8)
 
 (name doi2bib)
 
@@ -18,4 +18,12 @@
 (package
  (name doi2bib)
  (synopsis
-  "CLI tools to get bibtex entries from DOI/arXiv/PubMed IDs and format bibtex files"))
+  "CLI tool to get bibtex entries from DOI/arXiv/PubMed IDs"))
+
+(package
+  (name bibfmt)
+  (synopsis
+  "CLI tool to pretty-print bibtex files")
+  (depends
+   (cmdliner (>= 1.1.0))
+   (re (>= 1.0.0))))
