@@ -13,14 +13,12 @@ jobs:
       - name: Create draft release on tags
         id: create_draft_release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: actions/create-release@v1.1.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag: true
           draft: true
-          prerelease: false
+          generateReleaseNotes: true
+          prerelease: true
 
   build:
     needs: create_draft_release
