@@ -25,5 +25,6 @@
   (synopsis
   "CLI tool to pretty-print bibtex files")
   (depends
+   (ocaml (>= 4.14.0))
    (cmdliner (>= 1.1.0))
    (re (>= 1.0.0))))
