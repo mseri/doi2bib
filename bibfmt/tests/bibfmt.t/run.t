@@ -22,8 +22,7 @@ Test basic formatting of BibTeX entries by reading from a file
     journal   = "Celestial Mechanics and Dynamical Astronomy",
     publisher = "Springer Science and Business Media LLC",
     author    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
-    year      = "2020",
-    month     = "jan"
+    year      = "2020"
   }
 
 Test formatting BibTeX with braces instead of quotes
@@ -71,8 +70,7 @@ Test writing to output file
     journal   = "Celestial Mechanics and Dynamical Astronomy",
     publisher = "Springer Science and Business Media LLC",
     author    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
-    year      = "2020",
-    month     = "jan"
+    year      = "2020"
   }
 
 Test handling of multiple entries
@@ -164,8 +162,7 @@ Test handling of stdin input
     journal   = "Celestial Mechanics and Dynamical Astronomy",
     publisher = "Springer Science and Business Media LLC",
     author    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
-    year      = "2020",
-    month     = "jan"
+    year      = "2020"
   }
 
 Test parsing of malformed BibTeX (should produce a warning but attempt to return original content)
@@ -198,8 +195,7 @@ Test handling of entries with unquoted values like month abbreviations
     title   = "Test with unquoted values",
     author  = "Some Author",
     journal = "Some Journal",
-    year    = 2023,
-    month   = {jan}
+    year    = 2023
   }
 
 Test URL unescaping in URL fields

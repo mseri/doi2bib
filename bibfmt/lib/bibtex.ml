@@ -617,9 +617,14 @@ let format_entry entry =
       in
 
       let formatted_contents =
-        List.map
-          (format_entry_content_with_padding max_field_width)
-          entry.contents
+        entry.contents
+        (* DOI's bibtex API adds the "month" field but raises a warning with *)
+        (* many bib engines, and it is kind of useless. So we filter it out *)
+        |> List.filter (function
+             | Field f when String.(lowercase_ascii @@ f.name) = "month" ->
+                 false
+             | _ -> true)
+        |> List.map (format_entry_content_with_padding max_field_width)
       in
       let rec add_commas_except_last = function
         | [] -> []
