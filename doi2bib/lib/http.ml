@@ -6,6 +6,9 @@ exception PubMed_DOI_not_found
 
 let rec get ?proxy ?headers ?fallback uri =
   let headers = Clz_cohttp.update_header headers in
+  let headers =
+    Cohttp.Header.add_unless_exists headers "User-Agent" "doi2bib/0.1"
+  in
   let uri = Option.value ~default:"" proxy ^ uri |> Uri.of_string in
   let open Lwt.Syntax in
   let* resp, body = Cohttp_lwt_unix.Client.get ~headers uri in
@@ -71,11 +74,19 @@ let bib_of_arxiv ?proxy arxiv =
 
 let bib_of_pubmed ?proxy pubmed =
   let pubmed = String.trim pubmed in
+  let headers =
+    Cohttp.Header.of_list
+      [
+        ("Accept", "text/html,application/xhtml+xml,application/xml");
+        ("charset", "utf-8");
+      ]
+  in
   let uri =
-    "https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=" ^ pubmed
+    "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?ids=" ^ pubmed
+    ^ "&tool=doi2bib&email=yacht.mentees_2k@icloud.com"
   in
   let open Lwt.Syntax in
-  let* body = get ?proxy uri in
+  let* body = get ~headers ?proxy uri in
   let _, xml_blob = Ezxmlm.from_string body in
   try
     let doi = ref "" in
