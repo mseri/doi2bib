@@ -13,6 +13,9 @@
 #*                                                                        *
 #**************************************************************************
 
+# A symlink that comes with flakes updates
+result
+
 # general patterns
 
 *.o
