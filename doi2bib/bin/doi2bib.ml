@@ -49,7 +49,10 @@ let process_file outfile infile =
   let write_out () =
     let bibtex_out = Buffer.contents bibtex_buffer in
     let parsed_items = Bibtex.parse_bibtex bibtex_out in
-    let formatted = Bibtex.pretty_print_bibtex parsed_items in
+    let options =
+      Bibtex.{ strict = true; capitalize_names = true; align_entries = true }
+    in
+    let formatted = Bibtex.pretty_print_bibtex ~options parsed_items in
 
     match outfile with
     | "stdout" -> Lwt_io.print formatted

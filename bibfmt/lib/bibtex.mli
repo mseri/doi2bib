@@ -87,15 +87,25 @@ val get_parsed_items : parse_result -> bibtex_item list
 
 (** {2 Pretty Printers} *)
 
-val pretty_print_bibtex : bibtex_item list -> string
+type options = { capitalize_names : bool; strict : bool; align_entries : bool }
+(** Options for parsing and formatting BibTeX entries:
+    - [capitalize_names]: If true, the field names are made upper capital.
+    - [strict]: If true, parsing will be stricter and reject bibtex files with
+      duplicate fields.
+    - [align_entries]: If true, entries name and equal signs will be aligned for
+      better readability. *)
+
+val pretty_print_bibtex : ?options:options -> bibtex_item list -> string
 (** [pretty_print_bibtex items] formats a list of BibTeX items into a complete
     BibTeX string.
+    @param options Formatting options
     @param items List of BibTeX items to format
     @return Complete formatted BibTeX string *)
 
-val clean_bibtex : string -> string
+val clean_bibtex : ?options:options -> string -> string
 (** [clean_bibtex input] parses and reformats BibTeX input, effectively cleaning
     and normalizing the formatting.
+    @param options Formatting options (defaults to { capitalize_names: true; strict: false; align_entries: true})
     @param input The BibTeX content to clean
     @return Cleaned and reformatted BibTeX string *)
 
@@ -125,22 +135,22 @@ val format_field_value_with_url_unescaping : string -> field_value -> string
     @param value The field value to format
     @return String representation with URLs unescaped if applicable *)
 
-val format_field : field -> string
+val format_field : bool -> field -> string
 (** [format_field field] formats a complete field (name = value).
     @param field The field to format
     @return String representation of the field *)
 
-val format_entry_content : entry_content -> string
+val format_entry_content : bool -> entry_content -> string
 (** [format_entry_content content] formats entry content (field or comment).
     @param content The entry content to format
     @return String representation of the content *)
 
-val format_entry : bibtex_entry -> string
+val format_entry : options -> bibtex_entry -> string
 (** [format_entry entry] formats a complete BibTeX entry.
     @param entry The entry to format
     @return String representation of the entry *)
 
-val format_bibtex_item : bibtex_item -> string
+val format_bibtex_item : options -> bibtex_item -> string
 (** [format_bibtex_item item] formats a BibTeX item (entry or comment).
     @param item The item to format
     @return String representation of the item *)

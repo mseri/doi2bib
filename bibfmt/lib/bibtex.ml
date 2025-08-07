@@ -479,6 +479,12 @@ let has_parse_errors result = result.errors <> []
 let get_parse_errors result = result.errors
 let get_parsed_items result = result.items
 
+type options = { capitalize_names : bool; strict : bool; align_entries : bool }
+(** Options for parsing and formatting BibTeX entries:
+    - [capitalize_names]: If true, the field names are made upper capital.
+    - [strict]: If true, parsing will be stricter and reject bibtex files with
+      duplicate fields. *)
+
 (* String replacement helper for Unicode normalization *)
 let replace_string ~pattern ~replacement text =
   let pattern_len = String.length pattern in
@@ -578,53 +584,76 @@ let format_field_value_with_url_unescaping field_name field_value =
     | NumberValue n -> string_of_int n
   else format_field_value field_value
 
-let format_field_with_padding field max_width =
+let format_entry_name capitalized name =
+  if capitalized then String.uppercase_ascii name else name
+
+let format_field_with_padding capitalized field max_width =
   let padding = String.make (max_width - String.length field.name) ' ' in
-  "  " ^ field.name ^ padding ^ " = "
+  let name = format_entry_name capitalized field.name in
+  "  " ^ name ^ padding ^ " = "
   ^ format_field_value_with_url_unescaping field.name field.value
 
-let format_field field =
-  "  " ^ field.name ^ " = "
+let format_field capitalized field =
+  "  "
+  ^ format_entry_name capitalized field.name
+  ^ " = "
   ^ format_field_value_with_url_unescaping field.name field.value
 
-let format_entry_content_with_padding max_width = function
-  | Field field -> format_field_with_padding field max_width
+let format_entry_content_with_padding capitalized max_width = function
+  | Field field -> format_field_with_padding capitalized field max_width
   | EntryComment comment -> "  %" ^ comment
 
-let format_entry_content = function
-  | Field field -> format_field field
+let format_entry_content capitalized = function
+  | Field field -> format_field capitalized field
   | EntryComment comment -> "  %" ^ comment
 
-let format_entry entry =
+let format_entry options entry =
+  (if options.strict then
+     (* Check for duplicate fields in strict mode *)
+     let field_names =
+       List.fold_left
+         (fun acc content ->
+           match content with
+           | Field field -> String.lowercase_ascii field.name :: acc
+           | EntryComment _ -> acc)
+         [] entry.contents
+     in
+     let has_duplicates =
+       List.length field_names
+       <> List.length (List.sort_uniq String.compare field_names)
+     in
+     if has_duplicates then
+       failwith ("Duplicate fields found in entry: " ^ entry.citekey));
+
+  (* Format the entry *)
+  let format_entry =
+    if options.align_entries then
+      let max_field_width =
+        (* Calculate maximum field name length for alignment *)
+        List.fold_left
+          (fun acc content ->
+            match content with
+            | Field field -> max acc (String.length field.name)
+            | EntryComment _ -> acc)
+          0 entry.contents
+      in
+      format_entry_content_with_padding options.capitalize_names max_field_width
+    else format_entry_content options.capitalize_names
+  in
   let entry_type_str = string_of_entry_type entry.entry_type in
   let header = "@" ^ entry_type_str ^ "{" ^ entry.citekey in
   let contents_str =
     if entry.contents = [] then ""
     else
-      (* Calculate maximum field name length for alignment *)
-      let field_names =
-        List.fold_left
-          (fun acc content ->
-            match content with
-            | Field field -> field.name :: acc
-            | EntryComment _ -> acc)
-          [] entry.contents
-      in
-      let max_field_width =
-        List.fold_left
-          (fun acc name -> max acc (String.length name))
-          0 field_names
-      in
-
       let formatted_contents =
         entry.contents
-        (* DOI's bibtex API adds the "month" field but raises a warning with *)
-        (* many bib engines, and it is kind of useless. So we filter it out *)
+        (* DOI's bibtex API adds the "month" field but raises a warning with
+        many bib engines, and it is kind of useless. So we filter it out *)
         |> List.filter (function
              | Field f when String.(lowercase_ascii @@ f.name) = "month" ->
                  false
              | _ -> true)
-        |> List.map (format_entry_content_with_padding max_field_width)
+        |> List.map format_entry
       in
       let rec add_commas_except_last = function
         | [] -> []
@@ -642,14 +671,18 @@ let format_entry entry =
   in
   header ^ contents_str ^ "\n}"
 
-let format_bibtex_item = function
-  | Entry entry -> format_entry entry ^ "\n"
+let format_bibtex_item options = function
+  | Entry entry -> format_entry options entry ^ "\n"
   | Comment comment -> "%" ^ comment
 
-let pretty_print_bibtex items =
-  String.concat "\n" (List.map format_bibtex_item items)
+let pretty_print_bibtex ?options items =
+  let options =
+    Option.value options
+      ~default:{ capitalize_names = true; strict = false; align_entries = true }
+  in
+  String.concat "\n" (List.map (format_bibtex_item options) items)
 
 (* Helper function to clean and normalize BibTeX entries *)
-let clean_bibtex input =
+let clean_bibtex ?options input =
   let parsed_items = parse_bibtex input in
-  pretty_print_bibtex parsed_items
+  pretty_print_bibtex ?options parsed_items

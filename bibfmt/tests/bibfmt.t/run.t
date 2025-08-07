@@ -13,16 +13,16 @@ Test basic formatting of BibTeX entries by reading from a file
 
   $ bibfmt -f example.bib
   @article{Bravetti_2020,
-    title     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
-    volume    = "132",
+    TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
+    VOLUME    = "132",
     ISSN      = "1572-9478",
-    url       = "http://dx.doi.org/10.1007/s10569-019-9946-9",
+    URL       = "http://dx.doi.org/10.1007/s10569-019-9946-9",
     DOI       = "10.1007/s10569-019-9946-9",
-    number    = "1",
-    journal   = "Celestial Mechanics and Dynamical Astronomy",
-    publisher = "Springer Science and Business Media LLC",
-    author    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
-    year      = "2020"
+    NUMBER    = "1",
+    JOURNAL   = "Celestial Mechanics and Dynamical Astronomy",
+    PUBLISHER = "Springer Science and Business Media LLC",
+    AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
+    YEAR      = "2020"
   }
 
 Test formatting BibTeX with braces instead of quotes
@@ -44,33 +44,33 @@ Test formatting BibTeX with braces instead of quotes
 
   $ bibfmt -f braces.bib
   @article{Albert_1989,
-    title     = {Le théorème de réduction de Marsden-Weinstein en géométrie cosymplectique et de contact},
-    volume    = {6},
+    TITLE     = {Le théorème de réduction de Marsden-Weinstein en géométrie cosymplectique et de contact},
+    VOLUME    = {6},
     ISSN      = {0393-0440},
-    url       = {http://dx.doi.org/10.1016/0393-0440(89)90029-6},
+    URL       = {http://dx.doi.org/10.1016/0393-0440(89)90029-6},
     DOI       = {10.1016/0393-0440(89)90029-6},
-    number    = {4},
-    journal   = {Journal of Geometry and Physics},
-    publisher = {Elsevier BV},
-    author    = {Albert, Claude},
-    year      = {1989},
-    pages     = {627-649}
+    NUMBER    = {4},
+    JOURNAL   = {Journal of Geometry and Physics},
+    PUBLISHER = {Elsevier BV},
+    AUTHOR    = {Albert, Claude},
+    YEAR      = {1989},
+    PAGES     = {627-649}
   }
 
 Test writing to output file
   $ bibfmt -f example.bib -o formatted.bib
   $ cat formatted.bib
   @article{Bravetti_2020,
-    title     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
-    volume    = "132",
+    TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
+    VOLUME    = "132",
     ISSN      = "1572-9478",
-    url       = "http://dx.doi.org/10.1007/s10569-019-9946-9",
+    URL       = "http://dx.doi.org/10.1007/s10569-019-9946-9",
     DOI       = "10.1007/s10569-019-9946-9",
-    number    = "1",
-    journal   = "Celestial Mechanics and Dynamical Astronomy",
-    publisher = "Springer Science and Business Media LLC",
-    author    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
-    year      = "2020"
+    NUMBER    = "1",
+    JOURNAL   = "Celestial Mechanics and Dynamical Astronomy",
+    PUBLISHER = "Springer Science and Business Media LLC",
+    AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
+    YEAR      = "2020"
   }
 
 Test handling of multiple entries
@@ -91,16 +91,16 @@ Test handling of multiple entries
 
   $ bibfmt -f multiple.bib
   @article{Entry1,
-    title  = "First Entry",
-    author = "Author One",
-    year   = 2020
+    TITLE  = "First Entry",
+    AUTHOR = "Author One",
+    YEAR   = 2020
   }
   
   @book{Entry2,
-    title     = "Second Entry",
-    author    = "Author Two",
-    year      = 2021,
-    publisher = "Some Publisher"
+    TITLE     = "Second Entry",
+    AUTHOR    = "Author Two",
+    YEAR      = 2021,
+    PUBLISHER = "Some Publisher"
   }
 
 Test handling comments in BibTeX file
@@ -118,10 +118,10 @@ Test handling comments in BibTeX file
   $ bibfmt -f comments.bib
   % This is a comment
   @article{CommentTest,
-    title  = "Entry with comments",
-    author = "Some Author",
+    TITLE  = "Entry with comments",
+    AUTHOR = "Some Author",
     % Comment within entry
-    year   = 2022
+    YEAR   = 2022
   }
   
   % Another comment at the end
@@ -141,28 +141,28 @@ Test handling of entries with special characters
 
   $ bibfmt -f special.bib
   @article{SpecialChars,
-    title   = "Übungen zur Quantenmechanik",
-    author  = "Müller, J and Gómez, A",
-    journal = "Physics Today",
-    volume  = "10",
-    number  = "2",
-    pages   = "23--45",
-    year    = "2022"
+    TITLE   = "Übungen zur Quantenmechanik",
+    AUTHOR  = "Müller, J and Gómez, A",
+    JOURNAL = "Physics Today",
+    VOLUME  = "10",
+    NUMBER  = "2",
+    PAGES   = "23--45",
+    YEAR    = "2022"
   }
 
 Test handling of stdin input
   $ cat example.bib | bibfmt
   @article{Bravetti_2020,
-    title     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
-    volume    = "132",
+    TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
+    VOLUME    = "132",
     ISSN      = "1572-9478",
-    url       = "http://dx.doi.org/10.1007/s10569-019-9946-9",
+    URL       = "http://dx.doi.org/10.1007/s10569-019-9946-9",
     DOI       = "10.1007/s10569-019-9946-9",
-    number    = "1",
-    journal   = "Celestial Mechanics and Dynamical Astronomy",
-    publisher = "Springer Science and Business Media LLC",
-    author    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
-    year      = "2020"
+    NUMBER    = "1",
+    JOURNAL   = "Celestial Mechanics and Dynamical Astronomy",
+    PUBLISHER = "Springer Science and Business Media LLC",
+    AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
+    YEAR      = "2020"
   }
 
 Test parsing of malformed BibTeX (should produce a warning but attempt to return original content)
@@ -192,10 +192,10 @@ Test handling of entries with unquoted values like month abbreviations
 
   $ bibfmt -f unquoted.bib
   @article{UnquotedTest,
-    title   = "Test with unquoted values",
-    author  = "Some Author",
-    journal = "Some Journal",
-    year    = 2023
+    TITLE   = "Test with unquoted values",
+    AUTHOR  = "Some Author",
+    JOURNAL = "Some Journal",
+    YEAR    = 2023
   }
 
 Test URL unescaping in URL fields
@@ -210,10 +210,10 @@ Test URL unescaping in URL fields
 
   $ bibfmt -f url_escaping.bib
   @article{URLEscapeTest,
-    title  = "Test URL Unescaping",
-    author = "Test Author",
-    year   = 2023,
-    url    = "https://doi.org/10.1234/test(example)<path>:port;query"
+    TITLE  = "Test URL Unescaping",
+    AUTHOR = "Test Author",
+    YEAR   = 2023,
+    URL    = "https://doi.org/10.1234/test(example)<path>:port;query"
   }
 
 Test URL unescaping with braced values
@@ -228,10 +228,10 @@ Test URL unescaping with braced values
 
   $ bibfmt -f url_braced.bib
   @article{URLBracedTest,
-    title  = {Test URL Unescaping with Braces},
-    author = {Test Author},
-    year   = 2023,
-    url    = {https://example.com/api(v1)}
+    TITLE  = {Test URL Unescaping with Braces},
+    AUTHOR = {Test Author},
+    YEAR   = 2023,
+    URL    = {https://example.com/api(v1)}
   }
 
 Test that non-URL fields are not affected by URL unescaping
@@ -247,11 +247,11 @@ Test that non-URL fields are not affected by URL unescaping
 
   $ bibfmt -f non_url_fields.bib
   @article{NonURLTest,
-    title  = "Title with %2F and %28 percent escapes",
-    author = "Author %29 with escapes",
-    note   = "Note field %3A with various %3B escapes %3C here %3E",
-    year   = 2023,
-    url    = "https://example.com/path(test)"
+    TITLE  = "Title with %2F and %28 percent escapes",
+    AUTHOR = "Author %29 with escapes",
+    NOTE   = "Note field %3A with various %3B escapes %3C here %3E",
+    YEAR   = 2023,
+    URL    = "https://example.com/path(test)"
   }
 
 Test comma placement with percent characters in field values
@@ -266,10 +266,10 @@ Test comma placement with percent characters in field values
 
   $ bibfmt -f percent_comma.bib
   @article{PercentCommaTest,
-    title   = "Field with %percent signs",
-    author  = "Another %field with %signs",
-    journal = "Journal Name",
-    year    = 2023
+    TITLE   = "Field with %percent signs",
+    AUTHOR  = "Another %field with %signs",
+    JOURNAL = "Journal Name",
+    YEAR    = 2023
   }
 
 Test proper comma handling with comments and percent fields
@@ -287,13 +287,13 @@ Test proper comma handling with comments and percent fields
 
   $ bibfmt -f mixed_percent.bib
   @article{MixedPercentTest,
-    title  = "Title with %signs",
+    TITLE  = "Title with %signs",
     % This is a comment that should not get a comma
-    author = "Author Name",
-    note   = "Note with %more signs",
+    AUTHOR = "Author Name",
+    NOTE   = "Note with %more signs",
     % Another comment
-    year   = 2023,
-    url    = "https://test.com/path"
+    YEAR   = 2023,
+    URL    = "https://test.com/path"
   }
 
 Test URL field with mixed case (should still be unescaped)
@@ -309,11 +309,11 @@ Test URL field with mixed case (should still be unescaped)
 
   $ bibfmt -f url_case.bib
   @article{URLCaseTest,
-    title  = "Test URL Case Sensitivity",
-    author = "Test Author",
+    TITLE  = "Test URL Case Sensitivity",
+    AUTHOR = "Test Author",
     URL    = "https://example.com/PATH(TEST)",
-    Url    = "https://another.com:port/path",
-    year   = 2023
+    URL    = "https://another.com:port/path",
+    YEAR   = 2023
   }
 
 Test complex URL with all supported escape sequences
@@ -328,10 +328,10 @@ Test complex URL with all supported escape sequences
 
   $ bibfmt -f url_complete.bib
   @article{URLCompleteTest,
-    title  = "Complete URL Escape Test",
-    author = "Test Author",
-    year   = 2023,
-    url    = "https://dx.doi.org/10.1016/j.example.2023.01.001?ref&token:abc(def)<ghi>;jkl"
+    TITLE  = "Complete URL Escape Test",
+    AUTHOR = "Test Author",
+    YEAR   = 2023,
+    URL    = "https://dx.doi.org/10.1016/j.example.2023.01.001?ref&token:abc(def)<ghi>;jkl"
   }
 
 Test UTF-8 multi-byte characters in quoted strings
@@ -347,11 +347,11 @@ Test UTF-8 multi-byte characters in quoted strings
 
   $ bibfmt -f utf8_quoted.bib
   @article{UTF8QuotedTest,
-    title   = "Étude des caractères spéciaux: café, naïve, résumé",
-    author  = "Müller, João and García, José",
-    journal = "Revue Française de Physique",
-    year    = 2023,
-    note    = "Testing UTF-8: ñoël, αβγδε, 中文, русский, العربية"
+    TITLE   = "Étude des caractères spéciaux: café, naïve, résumé",
+    AUTHOR  = "Müller, João and García, José",
+    JOURNAL = "Revue Française de Physique",
+    YEAR    = 2023,
+    NOTE    = "Testing UTF-8: ñoël, αβγδε, 中文, русский, العربية"
   }
 
 Test UTF-8 multi-byte characters in braced strings
@@ -368,12 +368,12 @@ Test UTF-8 multi-byte characters in braced strings
 
   $ bibfmt -f utf8_braced.bib
   @book{UTF8BracedTest,
-    title     = {Αρχαία Ελληνικά: Ancient Greek Text},
-    author    = {日本語の著者 and Автор на русском},
-    publisher = {Издательство Unicode},
-    isbn      = {978-3-16-148410-0},
-    year      = {2023},
-    note      = {Mix of scripts: English, Español, Français, Deutsch, العربية, 中文, 日本語, Русский, Ελληνικά}
+    TITLE     = {Αρχαία Ελληνικά: Ancient Greek Text},
+    AUTHOR    = {日本語の著者 and Автор на русском},
+    PUBLISHER = {Издательство Unicode},
+    ISBN      = {978-3-16-148410-0},
+    YEAR      = {2023},
+    NOTE      = {Mix of scripts: English, Español, Français, Deutsch, العربية, 中文, 日本語, Русский, Ελληνικά}
   }
 
 Test UTF-8 characters of different byte lengths
@@ -389,11 +389,11 @@ Test UTF-8 characters of different byte lengths
 
   $ bibfmt -f utf8_lengths.bib
   @misc{UTF8LengthsTest,
-    title        = "UTF-8 byte length test: à (2-byte), € (3-byte), 𝕌 (4-byte)",
-    author       = "Unicode Specialist",
-    howpublished = "Various lengths: ñ, ∑, 𝒯, 𝔘, 𝕟, 𝖎, 𝗰, 𝘰, 𝙙, 𝚎",
-    year         = 2023,
-    note         = "Emoji test: 🚀 🌟 📚 🔬 💡 🎯"
+    TITLE        = "UTF-8 byte length test: à (2-byte), € (3-byte), 𝕌 (4-byte)",
+    AUTHOR       = "Unicode Specialist",
+    HOWPUBLISHED = "Various lengths: ñ, ∑, 𝒯, 𝔘, 𝕟, 𝖎, 𝗰, 𝘰, 𝙙, 𝚎",
+    YEAR         = 2023,
+    NOTE         = "Emoji test: 🚀 🌟 📚 🔬 💡 🎯"
   }
 
 Test mixed UTF-8 with BibTeX special characters and escapes
@@ -411,11 +411,11 @@ Test mixed UTF-8 with BibTeX special characters and escapes
 
   $ bibfmt -f utf8_mixed.bib
   @inproceedings{UTF8MixedTest,
-    title     = "Título español with \"quotes\" and {braces}",
-    author    = "Sánchez, María and O'Connor, Seán",
-    booktitle = {Proceedings of the 文献学 Conference on "Advanced Topics"},
-    pages     = "123--456",
-    year      = 2023,
-    note      = "Special: \&, \%, $, plus UTF-8: café, résumé, naïve, piñata",
-    publisher = "Éditions Académiques & Co."
+    TITLE     = "Título español with \"quotes\" and {braces}",
+    AUTHOR    = "Sánchez, María and O'Connor, Seán",
+    BOOKTITLE = {Proceedings of the 文献学 Conference on "Advanced Topics"},
+    PAGES     = "123--456",
+    YEAR      = 2023,
+    NOTE      = "Special: \&, \%, $, plus UTF-8: café, résumé, naïve, piñata",
+    PUBLISHER = "Éditions Académiques & Co."
   }
