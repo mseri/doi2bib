@@ -15,7 +15,9 @@ let process_id outfile id =
          Please report this issue at github.com/mseri/doi2bib/issues"
         id;
       bibtex)
-    else Bibtex.pretty_print_bibtex parsed_items
+    else
+      let options = Bibtex.{ default_options with strict = true } in
+      Bibtex.pretty_print_bibtex ~options parsed_items
   in
 
   match outfile with
@@ -48,11 +50,10 @@ let process_file outfile infile =
 
   let write_out () =
     let bibtex_out = Buffer.contents bibtex_buffer in
-    let parsed_items = Bibtex.parse_bibtex bibtex_out in
-    let options =
-      Bibtex.{ strict = true; capitalize_names = true; align_entries = true }
-    in
-    let formatted = Bibtex.pretty_print_bibtex ~options parsed_items in
+    let open Bibtex in
+    let parsed_items = parse_bibtex bibtex_out in
+    let options = { default_options with strict = true } in
+    let formatted = pretty_print_bibtex ~options parsed_items in
 
     match outfile with
     | "stdout" -> Lwt_io.print formatted

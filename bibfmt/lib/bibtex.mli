@@ -95,6 +95,10 @@ type options = { capitalize_names : bool; strict : bool; align_entries : bool }
     - [align_entries]: If true, entries name and equal signs will be aligned for
       better readability. *)
 
+val default_options : options
+(** Default formatting options for BibTeX entries: [capitalize_names: true],
+    [strict: false], [align_entries: true] *)
+
 val pretty_print_bibtex : ?options:options -> bibtex_item list -> string
 (** [pretty_print_bibtex items] formats a list of BibTeX items into a complete
     BibTeX string.
@@ -105,7 +109,7 @@ val pretty_print_bibtex : ?options:options -> bibtex_item list -> string
 val clean_bibtex : ?options:options -> string -> string
 (** [clean_bibtex input] parses and reformats BibTeX input, effectively cleaning
     and normalizing the formatting.
-    @param options Formatting options (defaults to { capitalize_names: true; strict: false; align_entries: true})
+    @param options Formatting options (defaults to the value of default_options)
     @param input The BibTeX content to clean
     @return Cleaned and reformatted BibTeX string *)
 

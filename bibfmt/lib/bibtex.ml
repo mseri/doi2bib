@@ -480,10 +480,9 @@ let get_parse_errors result = result.errors
 let get_parsed_items result = result.items
 
 type options = { capitalize_names : bool; strict : bool; align_entries : bool }
-(** Options for parsing and formatting BibTeX entries:
-    - [capitalize_names]: If true, the field names are made upper capital.
-    - [strict]: If true, parsing will be stricter and reject bibtex files with
-      duplicate fields. *)
+
+let default_options =
+  { capitalize_names = true; strict = false; align_entries = true }
 
 (* String replacement helper for Unicode normalization *)
 let replace_string ~pattern ~replacement text =
@@ -609,7 +608,8 @@ let format_entry_content capitalized = function
 
 let format_entry options entry =
   (if options.strict then
-     (* Check for duplicate fields in strict mode *)
+     (* Maybe this should be moved to the parser.
+        For now here is good enough. *)
      let field_names =
        List.fold_left
          (fun acc content ->
@@ -676,10 +676,7 @@ let format_bibtex_item options = function
   | Comment comment -> "%" ^ comment
 
 let pretty_print_bibtex ?options items =
-  let options =
-    Option.value options
-      ~default:{ capitalize_names = true; strict = false; align_entries = true }
-  in
+  let options = Option.value options ~default:default_options in
   String.concat "\n" (List.map (format_bibtex_item options) items)
 
 (* Helper function to clean and normalize BibTeX entries *)
