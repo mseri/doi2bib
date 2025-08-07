@@ -316,6 +316,11 @@ Test URL field with mixed case (should still be unescaped)
     YEAR   = 2023
   }
 
+Test that strict mode fails if a field is repeated
+  $ bibfmt --strict -f url_case.bib
+  bibfmt: Failure("Duplicate fields found in entry: URLCaseTest")
+  [124]
+
 Test complex URL with all supported escape sequences
   $ cat > url_complete.bib << EOF
   > @article{URLCompleteTest,

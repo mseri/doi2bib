@@ -1,6 +1,6 @@
 let err s = `Error (false, s)
 
-let bibfmt file out =
+let bibfmt file out strict =
   let main () =
     let file = if file = "" then "stdin" else file in
 
@@ -32,7 +32,9 @@ let bibfmt file out =
            issue at https://github.com/mseri/doi2bib/issues\n\
            %!";
         content)
-      else Bibtex.pretty_print_bibtex parse_result.items
+      else
+        let options = { Bibtex.default_options with strict } in
+        Bibtex.pretty_print_bibtex ~options parse_result.items
     in
 
     match out with
@@ -59,7 +61,14 @@ let () =
     Arg.(
       value & opt string "stdout" & info [ "o"; "output" ] ~docv:"OUTPUT" ~doc)
   in
-  let bibfmt_t = Term.(ret (const bibfmt $ file $ out)) in
+  let strict =
+    let doc =
+      "Enable strict parsing mode that rejects BibTeX files with duplicate \
+       fields."
+    in
+    Arg.(value & flag & info [ "s"; "strict" ] ~doc)
+  in
+  let bibfmt_t = Term.(ret (const bibfmt $ file $ out $ strict)) in
   let info =
     let doc = "A little CLI tool to pretty print bibtex files." in
     let man =
