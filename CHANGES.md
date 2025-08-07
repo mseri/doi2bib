@@ -1,3 +1,25 @@
+# 0.7.7 (2025-08-07)
+
+- bibfmt and doi2bib drop the month field in bibtex. It is
+  useless and the way DOI API reports it is also incompatible
+  with many bibtex configurations.
+- doi2bib: fix for changes in PubMed API
+- bibfmt: add support for field entries capitalization and
+  stricter parsing. Now, by default, field names are always
+  upper cased.
+- doi2bib: make the parser fails if there are duplicate fields
+  in a bibtex entry.
+
+# 0.7.6 (2025-06-24)
+
+- Introduced new bibfmt tool and library (as a new package)
+  for pretty printing and formatting BibTeX files.
+- doi2bib: always uses the improved BibTeX pretty-printer
+  from bibfmt for output.
+- doi2bib: removed custom url-unescaping logic; this is
+  now handled by bibfmt in a more systematic way.
+- Improved error reporting if parsing a BibTeX entry fails.
+
 # 0.6.2 (2022-10-17)
 
 - Workaround for %-escapes in crossref's doi url field
@@ -41,4 +63,3 @@
 # 0.4.0 (2021-04-02)
 
 - Added support for gzipped stream using decompress
-
