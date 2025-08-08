@@ -424,3 +424,109 @@ Test mixed UTF-8 with BibTeX special characters and escapes
     NOTE      = "Special: \&, \%, $, plus UTF-8: café, résumé, naïve, piñata",
     PUBLISHER = "Éditions Académiques & Co."
   }
+
+Test duplicate citekey detection with case-insensitive comparison in strict mode
+  $ cat > duplicates.bib << EOF
+  > @article{test1,
+  >   title = "First Article",
+  >   author = "John Doe",
+  >   year = 2020
+  > }
+  > 
+  > @book{Test1,
+  >   title = "Same Citekey Different Case",
+  >   author = "Jane Smith",
+  >   year = 2021
+  > }
+  > 
+  > @inproceedings{test2,
+  >   title = "Different Citekey",
+  >   author = "Bob Wilson",
+  >   year = 2022
+  > }
+  > EOF
+
+  $ bibfmt --strict -f duplicates.bib
+  Warning: Duplicate citekeys found (case-insensitive): test1
+  @article{test1,
+    TITLE  = "First Article",
+    AUTHOR = "John Doe",
+    YEAR   = 2020
+  }
+  
+  @book{Test1,
+    TITLE  = "Same Citekey Different Case",
+    AUTHOR = "Jane Smith",
+    YEAR   = 2021
+  }
+  
+  @inproceedings{test2,
+    TITLE  = "Different Citekey",
+    AUTHOR = "Bob Wilson",
+    YEAR   = 2022
+  }
+
+Test that non-strict mode doesn't warn about duplicate citekeys
+  $ bibfmt -f duplicates.bib
+  @article{test1,
+    TITLE  = "First Article",
+    AUTHOR = "John Doe",
+    YEAR   = 2020
+  }
+  
+  @book{Test1,
+    TITLE  = "Same Citekey Different Case",
+    AUTHOR = "Jane Smith",
+    YEAR   = 2021
+  }
+  
+  @inproceedings{test2,
+    TITLE  = "Different Citekey",
+    AUTHOR = "Bob Wilson",
+    YEAR   = 2022
+  }
+
+Test multiple duplicate citekeys in strict mode
+  $ cat > multiple_duplicates.bib << EOF
+  > @article{paper1,
+  >   title = "First Paper",
+  >   author = "Author One"
+  > }
+  > 
+  > @book{PAPER1,
+  >   title = "Book Version",
+  >   author = "Author Two"
+  > }
+  > 
+  > @inproceedings{conference1,
+  >   title = "Conference Paper",
+  >   author = "Author Three"
+  > }
+  > 
+  > @misc{Conference1,
+  >   title = "Same Conference Different Type",
+  >   author = "Author Four"
+  > }
+  > EOF
+
+  $ bibfmt --strict -f multiple_duplicates.bib
+  Warning: Duplicate citekeys found (case-insensitive): conference1, paper1
+  @article{paper1,
+    TITLE  = "First Paper",
+    AUTHOR = "Author One"
+  }
+  
+  @book{PAPER1,
+    TITLE  = "Book Version",
+    AUTHOR = "Author Two"
+  }
+  
+  @inproceedings{conference1,
+    TITLE  = "Conference Paper",
+    AUTHOR = "Author Three"
+  }
+  
+  @misc{Conference1,
+    TITLE  = "Same Conference Different Type",
+    AUTHOR = "Author Four"
+  }

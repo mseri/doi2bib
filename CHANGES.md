@@ -1,3 +1,7 @@
+
+- bibfmt: in strict mode, print a warning if there are multiple
+  repeated citekeys (case-insensitive).
+
 # 0.7.7 (2025-08-07)
 
 - bibfmt and doi2bib drop the month field in bibtex. It is

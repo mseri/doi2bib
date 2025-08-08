@@ -677,6 +677,31 @@ let format_bibtex_item options = function
 
 let pretty_print_bibtex ?options items =
   let options = Option.value options ~default:default_options in
+  (if options.strict then
+     (* Report all duplicate citekeys *)
+     let citekeys =
+       List.fold_left
+         (fun acc content ->
+           match content with
+           | Entry entry -> entry.citekey :: acc
+           | Comment _ -> acc)
+         [] items
+     in
+     (* Find duplicate citekeys with case-insensitive comparison *)
+     let lowercase_citekeys = List.map String.lowercase_ascii citekeys in
+     let rec find_duplicates seen acc = function
+       | [] -> acc
+       | key :: rest ->
+           if List.mem key seen then find_duplicates seen (key :: acc) rest
+           else find_duplicates (key :: seen) acc rest
+     in
+     let duplicates = find_duplicates [] [] lowercase_citekeys in
+     if duplicates <> [] then (
+       let duplicate_msg = String.concat ", " (List.rev duplicates) in
+       Printf.eprintf
+         "Warning: Duplicate citekeys found (case-insensitive): %s\n"
+         duplicate_msg;
+       flush stderr));
   String.concat "\n" (List.map (format_bibtex_item options) items)
 
 (* Helper function to clean and normalize BibTeX entries *)
