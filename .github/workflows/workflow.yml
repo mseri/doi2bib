@@ -84,31 +84,21 @@ jobs:
         run: |
           opam install --deps-only bibfmt
           opam exec -- dune build -p bibfmt
-          opam exec -- dune install bibfmt
 
       - name: Create bibfmt release archive
         if: ${{ startsWith(github.ref, 'refs/tags/') && !startsWith(runner.os, 'Win') }}
-        run: tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz -C _build/default/bibfmt/bin/ bibfmt.exe
+        run: |
+          mkdir bibfmt-out
+          cp _build/default/bibfmt/bin/bibfmt.exe bibfmt-out/bibfmt
+          cp _build/default/bibfmt/bin/bibdedup.exe bibfmt-out/bibdedup
+          opam exec -- tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz bibfmt-out/
 
       - name: Create bibfmt release archive (Windows)
         if: ${{ startsWith(github.ref, 'refs/tags/') && startsWith(runner.os, 'Win') }}
         run: |
-          mkdir bibfmt-out
-          cp _build/default/bibfmt/bin/bibfmt.exe bibfmt-out/
-          opam exec -- tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz bibfmt-out/
-
-      # - name: Check code formatting
-      #   if: ${{ success() && startsWith(runner.os, 'Linux') }}
-      #   run: |
-      #     opam install ocamlformat
-      #     opam exec -- dune build @fmt
-
-      # - name: Run tests
-      #   if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-      #   run: opam exec -- dune runtest
-
-      # - name: Build
-      #   run: opam exec -- dune build -p doi2bib
+          opam exec -- dos2unix .github/scripts/win.sh
+          opam exec -- bash .github/scripts/win.sh _build/default/bibfmt/bin
+          opam exec -- tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ matrix.suffix }}.tar.gz out/
 
       - name: Build doi2bib project
         run: |
@@ -188,7 +178,10 @@ jobs:
 
       - name: Create bibfmt release archive
         if: ${{ success() }}
-        run: tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz -C ./result-bibfmt-${{ matrix.platform }}/bin bibfmt
+        run: |
+          mkdir bibfmt-out
+          cp ./result-bibfmt-${{ matrix.platform }}/bin bibfmt-out/
+          tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz bibfmt-out/
 
       - name: Upload doi2bib build artifact
         if: ${{ success() && startsWith(github.ref, 'refs/tags/') }}
