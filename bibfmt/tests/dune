@@ -1,6 +1,6 @@
 (cram
  (applies_to :whole_subtree)
- (deps %{bin:bibfmt})
+ (deps %{bin:bibfmt} %{bin:bibdedup})
  (package bibfmt))
 
 (test

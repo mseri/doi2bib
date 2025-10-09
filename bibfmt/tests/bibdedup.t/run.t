@@ -49,13 +49,14 @@ Test default deduplication using title, author, and year
   
   
   Deduplication complete: 4 → 3 entries
-  @article{feynman1949,
-    AUTHOR  = {Richard P. Feynman},
-    TITLE   = {The Theory of Positrons},
-    JOURNAL = {Physical Review},
-    YEAR    = {1949},
-    VOLUME  = {76},
-    PAGES   = {749--759}
+  @article{einstein1905,
+    DOI     = {10.1002/andp.19053221004},
+    TITLE   = {On the Electrodynamics of Moving Bodies},
+    JOURNAL = {Annalen der Physik},
+    VOLUME  = {17},
+    YEAR    = {1905},
+    AUTHOR  = {Albert Einstein},
+    PAGES   = {891--921}
   }
   
   @article{einstein1905_another,
@@ -66,14 +67,13 @@ Test default deduplication using title, author, and year
     VOLUME  = {17}
   }
   
-  @article{einstein1905,
-    DOI     = {10.1002/andp.19053221004},
-    TITLE   = {On the Electrodynamics of Moving Bodies},
-    JOURNAL = {Annalen der Physik},
-    VOLUME  = {17},
-    YEAR    = {1905},
-    AUTHOR  = {Albert Einstein},
-    PAGES   = {891--921}
+  @article{feynman1949,
+    AUTHOR  = {Richard P. Feynman},
+    TITLE   = {The Theory of Positrons},
+    JOURNAL = {Physical Review},
+    YEAR    = {1949},
+    VOLUME  = {76},
+    PAGES   = {749--759}
   }
 
 Test custom keys for duplicate detection (title and year only)
@@ -89,15 +89,6 @@ Test custom keys for duplicate detection (title and year only)
   
   
   Deduplication complete: 4 → 2 entries
-  @article{feynman1949,
-    AUTHOR  = {Richard P. Feynman},
-    TITLE   = {The Theory of Positrons},
-    JOURNAL = {Physical Review},
-    YEAR    = {1949},
-    VOLUME  = {76},
-    PAGES   = {749--759}
-  }
-  
   @article{einstein1905,
     DOI     = {10.1002/andp.19053221004},
     TITLE   = {On the Electrodynamics of Moving Bodies},
@@ -106,6 +97,15 @@ Test custom keys for duplicate detection (title and year only)
     YEAR    = {1905},
     AUTHOR  = {Albert Einstein},
     PAGES   = {891--921}
+  }
+  
+  @article{feynman1949,
+    AUTHOR  = {Richard P. Feynman},
+    TITLE   = {The Theory of Positrons},
+    JOURNAL = {Physical Review},
+    YEAR    = {1949},
+    VOLUME  = {76},
+    PAGES   = {749--759}
   }
 
 Test DOI-based deduplication
@@ -145,19 +145,19 @@ Test DOI-based deduplication
   
   
   Deduplication complete: 3 → 2 entries
-  @article{paper3,
-    AUTHOR = {Bob Wilson},
-    TITLE  = {Different Research},
-    YEAR   = {2021},
-    DOI    = {10.1234/different.2021.001}
-  }
-  
   @article{paper1,
     DOI     = {10.1234/example.2020.001},
     TITLE   = {Research Paper},
     JOURNAL = {Nature},
     YEAR    = {2020},
     AUTHOR  = {John Doe}
+  }
+  
+  @article{paper3,
+    AUTHOR = {Bob Wilson},
+    TITLE  = {Different Research},
+    YEAR   = {2021},
+    DOI    = {10.1234/different.2021.001}
   }
 
 Test no duplicates case
@@ -246,17 +246,17 @@ Test whitespace and case normalization
   
   
   Deduplication complete: 3 → 2 entries
-  @article{test3,
-    AUTHOR = {Jane Smith},
-    TITLE  = {Deep Learning},
-    YEAR   = {2020}
-  }
-  
   @article{test1,
     TITLE   = { Machine    Learning },
     JOURNAL = {AI Journal},
     YEAR    = {2020},
     AUTHOR  = { John   Doe }
+  }
+  
+  @article{test3,
+    AUTHOR = {Jane Smith},
+    TITLE  = {Deep Learning},
+    YEAR   = {2020}
   }
 
 Test multiple file deduplication
@@ -441,15 +441,15 @@ Test handling of malformed BibTeX during deduplication
   No duplicates found.
   
   Deduplication complete: 2 → 2 entries
-  @article{good_entry,
-    AUTHOR = {Good Author},
-    TITLE  = {Good Title},
-    YEAR   = {2023}
-  }
-  
   @article{another_good,
     AUTHOR = {Another Author},
     TITLE  = {Another Title},
+    YEAR   = {2023}
+  }
+  
+  @article{good_entry,
+    AUTHOR = {Good Author},
+    TITLE  = {Good Title},
     YEAR   = {2023}
   }
 
@@ -499,17 +499,17 @@ Test basic citekey deduplication
   
   
   Deduplication complete: 3 → 2 entries
-  @article{unique_key,
-    AUTHOR = {Jane Smith},
-    TITLE  = {Different Paper},
-    YEAR   = {2021}
-  }
-  
   @article{duplicate_key,
     TITLE   = {First Version},
     JOURNAL = {Nature},
     YEAR    = {2020},
     AUTHOR  = {John Doe}
+  }
+  
+  @article{unique_key,
+    AUTHOR = {Jane Smith},
+    TITLE  = {Different Paper},
+    YEAR   = {2021}
   }
 
 Test citekey case sensitivity (case-insensitive matching)
@@ -585,16 +585,16 @@ Using only citekey - should merge paper2020 entries
   
   
   Deduplication complete: 3 → 2 entries
-  @article{paper2021,
-    AUTHOR = {John Doe},
-    TITLE  = {Machine Learning},
-    YEAR   = {2020}
-  }
-  
   @article{paper2020,
     TITLE  = {Machine Learning},
     YEAR   = {2020},
     AUTHOR = {John Doe}
+  }
+  
+  @article{paper2021,
+    AUTHOR = {John Doe},
+    TITLE  = {Machine Learning},
+    YEAR   = {2020}
   }
 
 Using citekey AND title - should keep all entries since they have different combinations
@@ -615,16 +615,16 @@ Using citekey AND title - should keep all entries since they have different comb
     YEAR   = {2020}
   }
   
-  @article{paper2021,
-    AUTHOR = {John Doe},
-    TITLE  = {Machine Learning},
-    YEAR   = {2020}
-  }
-  
   @article{paper2020,
     AUTHOR = {John Doe},
     TITLE  = {Deep Learning},
     YEAR   = {2021}
+  }
+  
+  @article{paper2021,
+    AUTHOR = {John Doe},
+    TITLE  = {Machine Learning},
+    YEAR   = {2020}
   }
 
 Test citekey with whitespace variations
@@ -825,6 +825,13 @@ Test multiple files with citekey deduplication
   
   
   Deduplication complete: 4 → 3 entries
+  @article{shared_key,
+    TITLE   = {Paper from File 1},
+    JOURNAL = {Nature},
+    YEAR    = {2020},
+    AUTHOR  = {Author 1}
+  }
+  
   @article{unique1,
     AUTHOR = {Author A},
     TITLE  = {Unique Paper 1},
@@ -835,13 +842,6 @@ Test multiple files with citekey deduplication
     AUTHOR = {Author B},
     TITLE  = {Unique Paper 2},
     YEAR   = {2022}
-  }
-  
-  @article{shared_key,
-    TITLE   = {Paper from File 1},
-    JOURNAL = {Nature},
-    YEAR    = {2020},
-    AUTHOR  = {Author 1}
   }
 
 Test strict mode with citekey deduplication
