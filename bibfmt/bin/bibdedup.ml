@@ -86,8 +86,15 @@ let bibdedup keys_str interactive strict output files =
             (List.length all_entries) (List.length deduplicated);
           flush stderr;
 
+          (* Sort by citekey *)
+          let sorted =
+            List.sort
+              (fun e1 e2 -> String.compare e1.Bibtex.citekey e2.Bibtex.citekey)
+              deduplicated
+          in
+
           (* Format output *)
-          let output_items = List.map (fun e -> Bibtex.Entry e) deduplicated in
+          let output_items = List.map (fun e -> Bibtex.Entry e) sorted in
           let format_options = { Bibtex.default_options with strict } in
           let formatted =
             Bibtex.pretty_print_bibtex ~options:format_options output_items
