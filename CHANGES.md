@@ -1,3 +1,4 @@
+# 0.7.8 (2025-10-09)
 
 - bibfmt: introduced new bibdedup CLI tool for deduplicating BibTeX
   entries across multiple files.
