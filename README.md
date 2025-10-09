@@ -10,10 +10,11 @@ Just so you know, there is now [Zotero BIB](https://zbib.org/) on the browser th
 
 ## Tools
 
-This package provides two CLI tools:
+This package provides three CLI tools:
 
 1. **doi2bib** - Get bibtex entries from DOI, arXiv ID, or PubMed ID (pretty printed with `bibfmt`)
 2. **bibfmt** - Pretty print and format bibtex files (using very few dependencies)
+3. **bibdedup** - Deduplicate BibTeX entries across multiple files
 
 ## doi2bib Usage
 
@@ -107,6 +108,58 @@ BUGS
    Report bugs to https://github.com/mseri/doi2bib/issues
 ```
 
+## bibdedup Usage
+
+```
+$ bibdedup --help=plain
+NAME
+   bibdedup - Deduplicate BibTeX entries across multiple files.
+
+SYNOPSIS
+   bibdedup [OPTION]... FILES...
+
+ARGUMENTS
+   FILES  BibTeX files to deduplicate.
+
+OPTIONS
+   -i, --interactive
+       Enable interactive mode to resolve conflicts. If not set,
+       automatically keeps the first occurrence of conflicting fields.
+
+   -k KEYS, --keys=KEYS (absent=title,author,year)
+       Comma-separated list of field names to use for duplicate
+       detection. Special key 'citekey' matches on citation keys.
+       Default: title,author,year
+
+   -o OUTPUT, --output=OUTPUT (absent=stdout)
+       Output file for deduplicated BibTeX. If not specified, writes to
+       stdout.
+
+   -s, --strict
+       Enable strict mode that checks for and reports duplicate fields
+       in entries.
+
+   --help[=FMT] (default=auto)
+       Show this help in format FMT. The value FMT must be one of `auto',
+       `pager', `groff' or `plain'. With `auto', the format is `pager` or
+       `plain' whenever the TERM env var is `dumb' or undefined.
+
+   --version
+       Show version information.
+
+EXIT STATUS
+   bibdedup exits with the following status:
+
+   0   on success.
+
+   124 on command line parsing errors.
+
+   125 on unexpected internal errors (bugs).
+
+BUGS
+   Report bugs to https://github.com/mseri/doi2bib/issues
+```
+
 ## Examples
 
 ### doi2bib Examples
@@ -148,6 +201,39 @@ Format bibtex content from stdin:
 
 ```bash
 $ echo "@article{key, title={My Title}, author={John Doe}}" | bibfmt
+```
+
+### bibdedup Examples
+
+Deduplicate entries from multiple files:
+
+```bash
+$ bibdedup file1.bib file2.bib -o merged.bib
+```
+
+Use custom keys for duplicate detection:
+
+```bash
+$ bibdedup --keys doi papers1.bib papers2.bib -o output.bib
+$ bibdedup --keys title,year lib1.bib lib2.bib -o combined.bib
+```
+
+Deduplicate using citation keys:
+
+```bash
+$ bibdedup --keys citekey old.bib new.bib -o updated.bib
+```
+
+Interactive mode for conflict resolution:
+
+```bash
+$ bibdedup --interactive --keys title,author,year *.bib -o curated.bib
+```
+
+Enable strict mode to check for duplicate fields:
+
+```bash
+$ bibdedup --strict --keys doi papers.bib -o clean.bib
 ```
 
 ## Installation

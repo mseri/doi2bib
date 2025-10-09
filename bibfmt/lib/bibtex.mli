@@ -158,3 +158,86 @@ val format_bibtex_item : options -> bibtex_item -> string
 (** [format_bibtex_item item] formats a BibTeX item (entry or comment).
     @param item The item to format
     @return String representation of the item *)
+
+(** {2 Deduplication Functions} *)
+
+type field_conflict = {
+  field_name : string;
+  values : (string * int) list;  (** (value, entry_index) pairs *)
+}
+(** Type representing a field conflict between duplicate entries. Each value is
+    paired with the index of the entry it came from. *)
+
+type duplicate_group = {
+  entries : bibtex_entry list;  (** The group of duplicate entries *)
+  matching_keys : (string * string) list;  (** Key-value pairs that match *)
+  conflicts : field_conflict list;  (** Fields that differ between entries *)
+}
+(** Type representing a group of duplicate entries identified by matching key
+    fields *)
+
+val deduplicate_entries :
+  ?keys:string list ->
+  ?interactive:bool ->
+  bibtex_entry list ->
+  bibtex_entry list
+(** [deduplicate_entries ~keys ~interactive entries] identifies and removes
+    duplicate BibTeX entries based on specified keys.
+
+    @param keys
+      List of field names to use for duplicate detection (default:
+      [["title"; "author"; "year"]]). You can also use ["citekey"] to match on
+      citation keys.
+    @param interactive
+      If true, prompts user for conflict resolution (default: [true]). If false,
+      keeps first occurrence of each field.
+    @param entries List of BibTeX entries to deduplicate
+    @return Deduplicated list of BibTeX entries
+
+    When duplicates are found:
+    - Entries are considered duplicates if their specified key fields match
+      (after whitespace normalization and case-insensitive comparison)
+    - The special key ["citekey"] matches on the entry's citation key rather
+      than a field value
+    - If interactive mode is enabled, for each field that differs between
+      duplicates, the user is prompted to choose which version to keep
+    - Whitespace-only differences are ignored during comparison
+    - The merged entry retains all unique fields from all duplicate entries
+
+    Example usage:
+    {[
+      let entries = parse_bibtex bibtex_string in
+      let entries_only =
+        List.filter_map
+          (function Entry e -> Some e | Comment _ -> None)
+          entries
+      in
+      let deduplicated = deduplicate_entries entries_only in
+      (* Use deduplicated entries *)
+    ]} *)
+
+val find_duplicate_groups :
+  ?keys:string list -> bibtex_entry list -> duplicate_group list
+(** [find_duplicate_groups ~keys entries] identifies groups of duplicate entries
+    without resolving them.
+
+    @param keys
+      List of field names to use for duplicate detection (default:
+      [["title"; "author"; "year"]]). Use ["citekey"] to match on citation keys.
+    @param entries List of BibTeX entries to analyze
+    @return List of duplicate groups found
+
+    This is useful for inspecting duplicates before deciding how to handle them.
+    Each group contains at least 2 entries that match on the specified keys. *)
+
+val merge_entries_non_interactive : bibtex_entry list -> bibtex_entry
+(** [merge_entries_non_interactive entries] merges duplicate entries by keeping
+    the first occurrence of each field.
+
+    @param entries List of duplicate entries to merge (must be non-empty)
+    @return Merged entry with fields from the first entry taking precedence
+    @raise Invalid_argument if the entries list is empty
+
+    This function does not prompt the user and simply takes the first value it
+    encounters for each field. It's useful for batch processing or when you
+    trust the ordering of your entries. *)

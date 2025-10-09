@@ -23,7 +23,7 @@
 (package
   (name bibfmt)
   (synopsis
-  "CLI tool to pretty-print bibtex files")
+  "CLI tools to format and deduplicate bibtex files")
   (depends
    (ocaml (>= 4.14.0))
    (cmdliner (>= 1.1.0))

@@ -708,3 +708,323 @@ let pretty_print_bibtex ?options items =
 let clean_bibtex ?options input =
   let parsed_items = parse_bibtex input in
   pretty_print_bibtex ?options parsed_items
+
+(* Deduplication functionality *)
+
+type field_conflict = {
+  field_name : string;
+  values : (string * int) list; (* (value, entry_index) pairs *)
+}
+(** Type representing a field conflict between duplicate entries *)
+
+type duplicate_group = {
+  entries : bibtex_entry list;
+  matching_keys : (string * string) list; (* Key-value pairs that match *)
+  conflicts : field_conflict list;
+}
+(** Type representing a group of duplicate entries *)
+
+(* Helper function to normalize whitespace for comparison *)
+let normalize_whitespace s =
+  let s = String.trim s in
+  (* Replace multiple whitespace characters with a single space *)
+  let rec collapse_spaces acc i =
+    if i >= String.length s then List.rev acc |> String.concat ""
+    else
+      let c = s.[i] in
+      match c with
+      | ' ' | '\t' | '\n' | '\r' ->
+          if i = 0 || acc = [] then collapse_spaces acc (i + 1)
+          else if List.hd acc = " " then collapse_spaces acc (i + 1)
+          else collapse_spaces (" " :: acc) (i + 1)
+      | _ -> collapse_spaces (String.make 1 c :: acc) (i + 1)
+  in
+  collapse_spaces [] 0
+
+let string_of_field_value = function
+  | QuotedStringValue s | BracedStringValue s | UnquotedStringValue s -> s
+  | NumberValue n -> string_of_int n
+
+(* case-insensitive! *)
+let get_field_value entry field_name =
+  let field_name_lower = String.lowercase_ascii field_name in
+  let rec find_field = function
+    | [] -> None
+    | Field { name; value } :: rest ->
+        if String.lowercase_ascii name = field_name_lower then
+          Some (string_of_field_value value)
+        else find_field rest
+    | EntryComment _ :: rest -> find_field rest
+  in
+  find_field entry.contents
+
+let get_all_field_names entry =
+  let rec extract_names acc = function
+    | [] -> List.rev acc
+    | Field { name; _ } :: rest ->
+        if not (List.mem (String.lowercase_ascii name) acc) then
+          extract_names (String.lowercase_ascii name :: acc) rest
+        else extract_names acc rest
+    | EntryComment _ :: rest -> extract_names acc rest
+  in
+  extract_names [] entry.contents
+
+let extract_key_values keys entry =
+  List.filter_map
+    (fun key ->
+      if String.lowercase_ascii key = "citekey" then
+        Some (key, normalize_whitespace entry.citekey)
+      else
+        match get_field_value entry key with
+        | Some value -> Some (key, normalize_whitespace value)
+        | None -> None)
+    keys
+
+(* Create a string representation of key values for grouping *)
+let key_signature key_values =
+  List.map (fun (k, v) -> k ^ ":" ^ String.lowercase_ascii v) key_values
+  |> List.sort String.compare |> String.concat "|"
+
+(* Group entries by their key field values *)
+let group_by_keys keys entries =
+  let groups = Hashtbl.create 16 in
+  List.iter
+    (fun entry ->
+      let key_values = extract_key_values keys entry in
+      if key_values <> [] then
+        let sig_str = key_signature key_values in
+        let existing = try Hashtbl.find groups sig_str with Not_found -> [] in
+        Hashtbl.replace groups sig_str (entry :: existing))
+    entries;
+  Hashtbl.fold
+    (fun sig_str entries acc -> (sig_str, List.rev entries) :: acc)
+    groups []
+
+(* Find conflicts between duplicate entries *)
+let find_field_conflicts entries =
+  if entries = [] then []
+  else
+    (* Get all unique field names across all entries *)
+    let all_field_names =
+      List.fold_left
+        (fun acc entry ->
+          List.fold_left
+            (fun acc2 name -> if List.mem name acc2 then acc2 else name :: acc2)
+            acc
+            (get_all_field_names entry))
+        [] entries
+      |> List.rev
+    in
+    (* For each field, check if there are different values *)
+    List.filter_map
+      (fun field_name ->
+        let values_with_indices =
+          List.mapi
+            (fun idx entry ->
+              match get_field_value entry field_name with
+              | Some value -> Some (normalize_whitespace value, idx)
+              | None -> None)
+            entries
+          |> List.filter_map (fun x -> x)
+        in
+        (* Get unique normalized values *)
+        let unique_values =
+          List.fold_left
+            (fun acc (value, idx) ->
+              let value_lower = String.lowercase_ascii value in
+              if
+                List.exists
+                  (fun (v, _) -> String.lowercase_ascii v = value_lower)
+                  acc
+              then acc
+              else (value, idx) :: acc)
+            [] values_with_indices
+          |> List.rev
+        in
+        if List.length unique_values > 1 then
+          Some { field_name; values = unique_values }
+        else None)
+      all_field_names
+
+(* Display a conflict to the user *)
+let display_conflict conflict =
+  Printf.printf "\nConflict in field '%s':\n" conflict.field_name;
+  List.iteri
+    (fun i (value, entry_idx) ->
+      Printf.printf "  [%d] (from entry %d): %s\n" i entry_idx value)
+    conflict.values;
+  flush stdout
+
+(* Prompt user to choose which value to keep *)
+let prompt_user_choice conflict =
+  let num_options = List.length conflict.values in
+  let rec get_choice () =
+    Printf.printf "Choose which value to keep [0-%d] (or 's' to skip): "
+      (num_options - 1);
+    flush stdout;
+    try
+      let line = input_line stdin in
+      let trimmed = String.trim line in
+      if trimmed = "s" || trimmed = "S" then -1
+      else
+        let choice = int_of_string trimmed in
+        if choice >= 0 && choice < num_options then choice
+        else (
+          Printf.printf
+            "Invalid choice. Please enter a number between 0 and %d.\n"
+            (num_options - 1);
+          get_choice ())
+    with
+    | Failure _ ->
+        Printf.printf "Invalid input. Please enter a number or 's' to skip.\n";
+        get_choice ()
+    | End_of_file ->
+        Printf.printf "\nEnd of input. Skipping this conflict.\n";
+        -1
+  in
+  get_choice ()
+
+(* Create a field from name and value string *)
+let make_field name value = Field { name; value = BracedStringValue value }
+
+(* Resolve conflicts interactively and merge entries *)
+let resolve_conflicts duplicate_group =
+  let base_entry = List.hd duplicate_group.entries in
+
+  Printf.printf "\n=== Resolving duplicates for entry: %s ===\n"
+    base_entry.citekey;
+  Printf.printf "Found %d duplicate entries\n"
+    (List.length duplicate_group.entries);
+
+  (* Build a map of resolved field values *)
+  let resolved_fields = Hashtbl.create 16 in
+
+  (* First, add all fields from the base entry *)
+  List.iter
+    (function
+      | Field { name; value } ->
+          let name_lower = String.lowercase_ascii name in
+          Hashtbl.replace resolved_fields name_lower
+            (name, string_of_field_value value)
+      | EntryComment _ -> ())
+    base_entry.contents;
+
+  (* Resolve conflicts *)
+  List.iter
+    (fun conflict ->
+      display_conflict conflict;
+      let choice = prompt_user_choice conflict in
+      if choice >= 0 then
+        let chosen_value, _ = List.nth conflict.values choice in
+        let name_lower = String.lowercase_ascii conflict.field_name in
+        Hashtbl.replace resolved_fields name_lower
+          (conflict.field_name, chosen_value))
+    duplicate_group.conflicts;
+
+  (* Add any fields that don't conflict *)
+  List.iter
+    (fun entry ->
+      List.iter
+        (function
+          | Field { name; value } ->
+              let name_lower = String.lowercase_ascii name in
+              if not (Hashtbl.mem resolved_fields name_lower) then
+                Hashtbl.replace resolved_fields name_lower
+                  (name, string_of_field_value value)
+          | EntryComment _ -> ())
+        entry.contents)
+    duplicate_group.entries;
+
+  (* Build the merged entry *)
+  let merged_contents =
+    Hashtbl.fold
+      (fun _ (name, value) acc -> make_field name value :: acc)
+      resolved_fields []
+    |> List.rev
+  in
+
+  { base_entry with contents = merged_contents }
+
+(* Find all duplicate groups *)
+let find_duplicate_groups ?(keys = [ "title"; "author"; "year" ]) entries =
+  let grouped = group_by_keys keys entries in
+  List.filter_map
+    (fun (_, group_entries) ->
+      if List.length group_entries > 1 then
+        let key_values = extract_key_values keys (List.hd group_entries) in
+        let conflicts = find_field_conflicts group_entries in
+        Some { entries = group_entries; matching_keys = key_values; conflicts }
+      else None)
+    grouped
+
+(* Merge entries non-interactively by keeping first occurrence of each field *)
+let merge_entries_non_interactive entries =
+  if entries = [] then invalid_arg "merge_entries_non_interactive: empty list"
+  else
+    let base_entry = List.hd entries in
+    let merged_fields = Hashtbl.create 16 in
+
+    (* Collect all fields, keeping first occurrence *)
+    List.iter
+      (fun entry ->
+        List.iter
+          (function
+            | Field { name; value } ->
+                let name_lower = String.lowercase_ascii name in
+                if not (Hashtbl.mem merged_fields name_lower) then
+                  Hashtbl.replace merged_fields name_lower
+                    (name, string_of_field_value value)
+            | EntryComment _ -> ())
+          entry.contents)
+      entries;
+
+    (* Build merged entry *)
+    let merged_contents =
+      Hashtbl.fold
+        (fun _ (name, value) acc -> make_field name value :: acc)
+        merged_fields []
+      |> List.rev
+    in
+
+    { base_entry with contents = merged_contents }
+
+(* Main deduplication function *)
+let deduplicate_entries ?(keys = [ "title"; "author"; "year" ])
+    ?(interactive = true) entries =
+  let duplicate_groups = find_duplicate_groups ~keys entries in
+
+  if duplicate_groups = [] then (
+    Printf.printf "No duplicates found.\n";
+    flush stdout;
+    entries)
+  else (
+    Printf.printf "Found %d duplicate groups.\n\n"
+      (List.length duplicate_groups);
+    flush stdout;
+
+    (* Create a set of entries that are duplicates *)
+    let duplicate_entries = Hashtbl.create 16 in
+    List.iter
+      (fun group ->
+        List.iter
+          (fun entry -> Hashtbl.add duplicate_entries entry.citekey entry)
+          group.entries)
+      duplicate_groups;
+
+    (* Resolve duplicates *)
+    let merged_entries =
+      List.map
+        (fun group ->
+          if interactive then resolve_conflicts group
+          else merge_entries_non_interactive group.entries)
+        duplicate_groups
+    in
+
+    (* Filter out duplicate entries and add merged ones *)
+    let non_duplicates =
+      List.filter
+        (fun entry -> not (Hashtbl.mem duplicate_entries entry.citekey))
+        entries
+    in
+
+    non_duplicates @ merged_entries)

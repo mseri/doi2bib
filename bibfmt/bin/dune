@@ -3,3 +3,9 @@
  (public_name bibfmt)
  (libraries cmdliner bibfmt unix)
  (package bibfmt))
+
+(executable
+ (name bibdedup)
+ (public_name bibdedup)
+ (libraries cmdliner bibfmt unix)
+ (package bibfmt))

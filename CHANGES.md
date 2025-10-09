@@ -1,4 +1,9 @@
 
+- bibfmt: introduced new bibdedup CLI tool for deduplicating BibTeX
+  entries across multiple files.
+- bibfmt: added deduplication library functions (deduplicate_entries,
+  find_duplicate_groups, merge_entries_non_interactive) with support
+  for configurable keys.
 - bibfmt: in strict mode, print a warning if there are multiple
   repeated citekeys (case-insensitive).
 
