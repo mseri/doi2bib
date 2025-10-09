@@ -180,7 +180,7 @@ jobs:
         if: ${{ success() }}
         run: |
           mkdir bibfmt-out
-          cp ./result-bibfmt-${{ matrix.platform }}/bin bibfmt-out/
+          cp ./result-bibfmt-${{ matrix.platform }}/bin/* bibfmt-out/
           tar czf bibfmt-${{ env.GITHUB_TAG }}-${{ env.ARCH }}-unknown-linux-musl.tar.gz bibfmt-out/
 
       - name: Upload doi2bib build artifact
