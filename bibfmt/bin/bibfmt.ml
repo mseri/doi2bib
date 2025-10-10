@@ -1,6 +1,6 @@
 let err s = `Error (false, s)
 
-let bibfmt file out strict =
+let bibfmt file out strict quiet force =
   let main () =
     let file = if file = "" then "stdin" else file in
 
@@ -14,18 +14,37 @@ let bibfmt file out strict =
     let parse_result = Bibtex.parse_bibtex_with_errors content in
 
     let formatted =
-      if Bibtex.has_parse_errors parse_result then (
-        Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
-        List.iter
-          (fun error ->
-            Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line error.message)
-          (Bibtex.get_parse_errors parse_result);
-        Printf.eprintf
-          "Please check your BibTeX syntax or raise an issue at \
-           https://github.com/mseri/doi2bib/issues\n\
-           Returning unformatted content.\n\
-           %!";
-        content)
+      if Bibtex.has_parse_errors parse_result then
+        if force then (
+          Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
+          List.iter
+            (fun error ->
+              Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line error.message)
+            (Bibtex.get_parse_errors parse_result);
+          Printf.eprintf
+            "Please check your BibTeX syntax or raise an issue at \
+             https://github.com/mseri/doi2bib/issues\n\
+             Continuing with successfully parsed entries...\n\
+             %!";
+          if parse_result.items = [] then (
+            Printf.eprintf
+              "Warning: No valid BibTeX entries found in the file.\n%!";
+            content)
+          else
+            let options = { Bibtex.default_options with strict } in
+            Bibtex.pretty_print_bibtex ~options parse_result.items)
+        else (
+          Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
+          List.iter
+            (fun error ->
+              Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line error.message)
+            (Bibtex.get_parse_errors parse_result);
+          Printf.eprintf
+            "Please check your BibTeX syntax or raise an issue at \
+             https://github.com/mseri/doi2bib/issues\n\
+             Returning unformatted content.\n\
+             %!";
+          content)
       else if parse_result.items = [] then (
         Printf.eprintf
           "Warning: No valid BibTeX entries found in the file. Please raise an \
@@ -38,7 +57,7 @@ let bibfmt file out strict =
     in
 
     match out with
-    | "stdout" -> print_string formatted
+    | "stdout" -> if not quiet then print_string formatted
     | _ ->
         Out_channel.(with_open_text out (fun oc -> output_string oc formatted))
   in
@@ -68,7 +87,20 @@ let () =
     in
     Arg.(value & flag & info [ "s"; "strict" ] ~doc)
   in
-  let bibfmt_t = Term.(ret (const bibfmt $ file $ out $ strict)) in
+  let quiet =
+    let doc = "Quiet mode: suppress all output except errors." in
+    Arg.(value & flag & info [ "q"; "quiet" ] ~doc)
+  in
+  let force =
+    let doc =
+      "Force mode: ignore parsing errors and output only successfully parsed \
+       entries."
+    in
+    Arg.(value & flag & info [ "force" ] ~doc)
+  in
+  let bibfmt_t =
+    Term.(ret (const bibfmt $ file $ out $ strict $ quiet $ force))
+  in
   let info =
     let doc = "A little CLI tool to pretty print bibtex files." in
     let man =

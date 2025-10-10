@@ -530,3 +530,46 @@ Test multiple duplicate citekeys in strict mode
     TITLE  = "Same Conference Different Type",
     AUTHOR = "Author Four"
   }
+
+Test quiet mode suppresses warnings and output
+  $ bibfmt --quiet -f malformed.bib
+  Warning: Found parsing errors in the BibTeX file:
+    - Line 1: Failed to parse entry starting at line 1
+  Please check your BibTeX syntax or raise an issue at https://github.com/mseri/doi2bib/issues
+  Returning unformatted content.
+
+Test force mode outputs only successfully parsed entries
+  $ cat > mixed_valid_invalid.bib << 'BIBTEX'
+  > @article{ValidEntry1,
+  >   title = "First Valid Entry",
+  >   author = "John Doe",
+  >   year = 2020
+  > }
+  > 
+  > @article{InvalidEntry,
+  >   title = "This entry has no closing brace"
+  > 
+  > @book{ValidEntry2,
+  >   title = "Second Valid Entry",
+  >   author = "Jane Smith",
+  >   year = 2021
+  > }
+  > BIBTEX
+
+  $ bibfmt --force -f mixed_valid_invalid.bib
+  Warning: Found parsing errors in the BibTeX file:
+    - Line 7: Failed to parse entry starting at line 7
+    - Line 7: Skipped unparsable content from line 7 to line 10
+  Please check your BibTeX syntax or raise an issue at https://github.com/mseri/doi2bib/issues
+  Continuing with successfully parsed entries...
+  @article{ValidEntry1,
+    TITLE  = "First Valid Entry",
+    AUTHOR = "John Doe",
+    YEAR   = 2020
+  }
+  
+  @book{ValidEntry2,
+    TITLE  = "Second Valid Entry",
+    AUTHOR = "Jane Smith",
+    YEAR   = 2021
+  }
