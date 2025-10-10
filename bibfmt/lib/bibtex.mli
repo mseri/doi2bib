@@ -176,46 +176,6 @@ type duplicate_group = {
 (** Type representing a group of duplicate entries identified by matching key
     fields *)
 
-val deduplicate_entries :
-  ?keys:string list ->
-  ?interactive:bool ->
-  bibtex_entry list ->
-  bibtex_entry list
-(** [deduplicate_entries ~keys ~interactive entries] identifies and removes
-    duplicate BibTeX entries based on specified keys.
-
-    @param keys
-      List of field names to use for duplicate detection (default:
-      [["title"; "author"; "year"]]). You can also use ["citekey"] to match on
-      citation keys.
-    @param interactive
-      If true, prompts user for conflict resolution (default: [true]). If false,
-      keeps first occurrence of each field.
-    @param entries List of BibTeX entries to deduplicate
-    @return Deduplicated list of BibTeX entries
-
-    When duplicates are found:
-    - Entries are considered duplicates if their specified key fields match
-      (after whitespace normalization and case-insensitive comparison)
-    - The special key ["citekey"] matches on the entry's citation key rather
-      than a field value
-    - If interactive mode is enabled, for each field that differs between
-      duplicates, the user is prompted to choose which version to keep
-    - Whitespace-only differences are ignored during comparison
-    - The merged entry retains all unique fields from all duplicate entries
-
-    Example usage:
-    {[
-      let entries = parse_bibtex bibtex_string in
-      let entries_only =
-        List.filter_map
-          (function Entry e -> Some e | Comment _ -> None)
-          entries
-      in
-      let deduplicated = deduplicate_entries entries_only in
-      (* Use deduplicated entries *)
-    ]} *)
-
 val find_duplicate_groups :
   ?keys:string list -> bibtex_entry list -> duplicate_group list
 (** [find_duplicate_groups ~keys entries] identifies groups of duplicate entries
@@ -230,14 +190,14 @@ val find_duplicate_groups :
     This is useful for inspecting duplicates before deciding how to handle them.
     Each group contains at least 2 entries that match on the specified keys. *)
 
-val merge_entries_non_interactive : bibtex_entry list -> bibtex_entry
-(** [merge_entries_non_interactive entries] merges duplicate entries by keeping
-    the first occurrence of each field.
+val string_of_field_value : field_value -> string
+(** [string_of_field_value fv] converts a field value to its string representation.
+    @param fv The field value to convert
+    @return String representation of the field value *)
 
-    @param entries List of duplicate entries to merge (must be non-empty)
-    @return Merged entry with fields from the first entry taking precedence
-    @raise Invalid_argument if the entries list is empty
-
-    This function does not prompt the user and simply takes the first value it
-    encounters for each field. It's useful for batch processing or when you
-    trust the ordering of your entries. *)
+val make_field : string -> string -> entry_content
+(** [make_field name value] creates a BibTeX field with the given name and value.
+    The value is wrapped in braces.
+    @param name Field name
+    @param value Field value as a string
+    @return An entry_content Field with a BracedStringValue *)
