@@ -82,8 +82,19 @@ OPTIONS
        Reads the bib content from the specified file instead of the
        standard input.
 
+   --force
+       Force mode: ignore parsing errors and output only successfully
+       parsed entries.
+
    -o OUTPUT, --output=OUTPUT (absent=stdout)
        Saves the pretty printed bib to the specified file.
+
+   -q, --quiet
+       Quiet mode: suppress all output except warnings and errors.
+
+   -s, --strict
+       Enable strict parsing mode that rejects BibTeX files with
+       duplicate fields.
 
    --help[=FMT] (default=auto)
        Show this help in format FMT. The value FMT must be one of `auto',
@@ -201,6 +212,26 @@ Format bibtex content from stdin:
 
 ```bash
 $ echo "@article{key, title={My Title}, author={John Doe}}" | bibfmt
+```
+
+Format with strict mode to check for duplicate fields (these can be removed
+with `bibdedup`):
+
+```bash
+$ bibfmt -f bibliography.bib --strict -q
+```
+
+You can use quiet mode to suppress normal output and only see warnings/errors:
+
+```bash
+$ bibfmt -f messy.bib --quiet
+```
+
+Force formatting even with parsing errors, by removing all the problematic
+entries (_only do this after careful consideration_):
+
+```bash
+$ bibfmt -f problematic.bib --force -o partial.bib
 ```
 
 ### bibdedup Examples
