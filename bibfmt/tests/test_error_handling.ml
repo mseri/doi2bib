@@ -159,6 +159,6 @@ let run_tests () =
   test_backward_compatibility ();
   test_error_details ();
   test_utf8_handling ();
-  Printf.printf "\n✅ All tests passed!\n"
+  Printf.printf "\n✓✓✓ All tests passed!\n"
 
 let () = run_tests ()
