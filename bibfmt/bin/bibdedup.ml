@@ -100,6 +100,37 @@ let resolve_conflicts duplicate_group =
 
   { base_entry with Bibtex.contents = merged_contents }
 
+(* Merge entries non-interactively by keeping first occurrence of each field *)
+let merge_entries_non_interactive entries =
+  if entries = [] then invalid_arg "merge_entries_non_interactive: empty list"
+  else
+    let base_entry = List.hd entries in
+    let merged_fields = Hashtbl.create 16 in
+
+    (* Collect all fields, keeping first occurrence *)
+    List.iter
+      (fun entry ->
+        List.iter
+          (function
+            | Bibtex.Field { name; value } ->
+                let name_lower = String.lowercase_ascii name in
+                if not (Hashtbl.mem merged_fields name_lower) then
+                  Hashtbl.replace merged_fields name_lower
+                    (name, Bibtex.string_of_field_value value)
+            | Bibtex.EntryComment _ -> ())
+          entry.Bibtex.contents)
+      entries;
+
+    (* Build merged entry *)
+    let merged_contents =
+      Hashtbl.fold
+        (fun _ (name, value) acc -> Bibtex.make_field name value :: acc)
+        merged_fields []
+      |> List.rev
+    in
+
+    { base_entry with Bibtex.contents = merged_contents }
+
 (* Main deduplication function with IO *)
 let deduplicate_entries ?(keys = [ "title"; "author"; "year" ])
     ?(interactive = true) entries =
@@ -128,7 +159,7 @@ let deduplicate_entries ?(keys = [ "title"; "author"; "year" ])
       List.map
         (fun group ->
           if interactive then resolve_conflicts group
-          else Bibtex.merge_entries_non_interactive group.Bibtex.entries)
+          else merge_entries_non_interactive group.Bibtex.entries)
         duplicate_groups
     in
 

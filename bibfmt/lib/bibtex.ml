@@ -861,35 +861,4 @@ let find_duplicate_groups ?(keys = [ "title"; "author"; "year" ]) entries =
       else None)
     grouped
 
-(* Merge entries non-interactively by keeping first occurrence of each field *)
-let merge_entries_non_interactive entries =
-  if entries = [] then invalid_arg "merge_entries_non_interactive: empty list"
-  else
-    let base_entry = List.hd entries in
-    let merged_fields = Hashtbl.create 16 in
-
-    (* Collect all fields, keeping first occurrence *)
-    List.iter
-      (fun entry ->
-        List.iter
-          (function
-            | Field { name; value } ->
-                let name_lower = String.lowercase_ascii name in
-                if not (Hashtbl.mem merged_fields name_lower) then
-                  Hashtbl.replace merged_fields name_lower
-                    (name, string_of_field_value value)
-            | EntryComment _ -> ())
-          entry.contents)
-      entries;
-
-    (* Build merged entry *)
-    let merged_contents =
-      Hashtbl.fold
-        (fun _ (name, value) acc -> make_field name value :: acc)
-        merged_fields []
-      |> List.rev
-    in
-
-    { base_entry with contents = merged_contents }
-
 

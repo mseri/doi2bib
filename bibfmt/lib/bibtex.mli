@@ -190,18 +190,6 @@ val find_duplicate_groups :
     This is useful for inspecting duplicates before deciding how to handle them.
     Each group contains at least 2 entries that match on the specified keys. *)
 
-val merge_entries_non_interactive : bibtex_entry list -> bibtex_entry
-(** [merge_entries_non_interactive entries] merges duplicate entries by keeping
-    the first occurrence of each field.
-
-    @param entries List of duplicate entries to merge (must be non-empty)
-    @return Merged entry with fields from the first entry taking precedence
-    @raise Invalid_argument if the entries list is empty
-
-    This function does not prompt the user and simply takes the first value it
-    encounters for each field. It's useful for batch processing or when you
-    trust the ordering of your entries. *)
-
 val string_of_field_value : field_value -> string
 (** [string_of_field_value fv] converts a field value to its string representation.
     @param fv The field value to convert
