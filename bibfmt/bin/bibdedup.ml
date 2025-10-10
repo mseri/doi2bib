@@ -4,6 +4,143 @@ let parse_keys keys_str =
   if keys_str = "" then [ "title"; "author"; "year" ]
   else String.split_on_char ',' keys_str |> List.map String.trim
 
+(* Display a conflict to the user *)
+let display_conflict conflict =
+  Printf.printf "\nConflict in field '%s':\n" conflict.Bibtex.field_name;
+  List.iteri
+    (fun i (value, entry_idx) ->
+      Printf.printf "  [%d] (from entry %d): %s\n" i entry_idx value)
+    conflict.Bibtex.values;
+  flush stdout
+
+(* Prompt user to choose which value to keep *)
+let prompt_user_choice conflict =
+  let num_options = List.length conflict.Bibtex.values in
+  let rec get_choice () =
+    Printf.printf "Choose which value to keep [0-%d] (or 's' to skip): "
+      (num_options - 1);
+    flush stdout;
+    try
+      let line = input_line stdin in
+      let trimmed = String.trim line in
+      if trimmed = "s" || trimmed = "S" then -1
+      else
+        let choice = int_of_string trimmed in
+        if choice >= 0 && choice < num_options then choice
+        else (
+          Printf.printf
+            "Invalid choice. Please enter a number between 0 and %d.\n"
+            (num_options - 1);
+          get_choice ())
+    with
+    | Failure _ ->
+        Printf.printf "Invalid input. Please enter a number or 's' to skip.\n";
+        get_choice ()
+    | End_of_file ->
+        Printf.printf "\nEnd of input. Skipping this conflict.\n";
+        -1
+  in
+  get_choice ()
+
+(* Resolve conflicts interactively and merge entries *)
+let resolve_conflicts duplicate_group =
+  let base_entry = List.hd duplicate_group.Bibtex.entries in
+
+  Printf.printf "\n=== Resolving duplicates for entry: %s ===\n"
+    base_entry.Bibtex.citekey;
+  Printf.printf "Found %d duplicate entries\n"
+    (List.length duplicate_group.Bibtex.entries);
+
+  (* Build a map of resolved field values *)
+  let resolved_fields = Hashtbl.create 16 in
+
+  (* First, add all fields from the base entry *)
+  List.iter
+    (function
+      | Bibtex.Field { name; value } ->
+          let name_lower = String.lowercase_ascii name in
+          Hashtbl.replace resolved_fields name_lower
+            (name, Bibtex.string_of_field_value value)
+      | Bibtex.EntryComment _ -> ())
+    base_entry.Bibtex.contents;
+
+  (* Resolve conflicts *)
+  List.iter
+    (fun conflict ->
+      display_conflict conflict;
+      let choice = prompt_user_choice conflict in
+      if choice >= 0 then
+        let chosen_value, _ = List.nth conflict.Bibtex.values choice in
+        let name_lower = String.lowercase_ascii conflict.Bibtex.field_name in
+        Hashtbl.replace resolved_fields name_lower
+          (conflict.Bibtex.field_name, chosen_value))
+    duplicate_group.Bibtex.conflicts;
+
+  (* Add any fields that don't conflict *)
+  List.iter
+    (fun entry ->
+      List.iter
+        (function
+          | Bibtex.Field { name; value } ->
+              let name_lower = String.lowercase_ascii name in
+              if not (Hashtbl.mem resolved_fields name_lower) then
+                Hashtbl.replace resolved_fields name_lower
+                  (name, Bibtex.string_of_field_value value)
+          | Bibtex.EntryComment _ -> ())
+        entry.Bibtex.contents)
+    duplicate_group.Bibtex.entries;
+
+  (* Build the merged entry *)
+  let merged_contents =
+    Hashtbl.fold
+      (fun _ (name, value) acc -> Bibtex.make_field name value :: acc)
+      resolved_fields []
+    |> List.rev
+  in
+
+  { base_entry with Bibtex.contents = merged_contents }
+
+(* Main deduplication function with IO *)
+let deduplicate_entries ?(keys = [ "title"; "author"; "year" ])
+    ?(interactive = true) entries =
+  let duplicate_groups = Bibtex.find_duplicate_groups ~keys entries in
+
+  if duplicate_groups = [] then (
+    Printf.printf "No duplicates found.\n";
+    flush stdout;
+    entries)
+  else (
+    Printf.printf "Found %d duplicate groups.\n\n"
+      (List.length duplicate_groups);
+    flush stdout;
+
+    (* Create a set of entries that are duplicates *)
+    let duplicate_entries = Hashtbl.create 16 in
+    List.iter
+      (fun group ->
+        List.iter
+          (fun entry -> Hashtbl.add duplicate_entries entry.Bibtex.citekey entry)
+          group.Bibtex.entries)
+      duplicate_groups;
+
+    (* Resolve duplicates *)
+    let merged_entries =
+      List.map
+        (fun group ->
+          if interactive then resolve_conflicts group
+          else Bibtex.merge_entries_non_interactive group.Bibtex.entries)
+        duplicate_groups
+    in
+
+    (* Filter out duplicate entries and add merged ones *)
+    let non_duplicates =
+      List.filter
+        (fun entry -> not (Hashtbl.mem duplicate_entries entry.Bibtex.citekey))
+        entries
+    in
+
+    non_duplicates @ merged_entries)
+
 let read_file filename =
   try
     let content =
@@ -79,7 +216,7 @@ let bibdedup keys_str interactive strict output files =
           flush stderr;
 
           let deduplicated =
-            Bibtex.deduplicate_entries ~keys ~interactive all_entries
+            deduplicate_entries ~keys ~interactive all_entries
           in
 
           Printf.eprintf "\nDeduplication complete: %d → %d entries\n"
