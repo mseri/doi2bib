@@ -1,11 +1,13 @@
 (executable
  (name bibfmt)
  (public_name bibfmt)
+ (modules bibfmt)
  (libraries cmdliner bibfmt unix)
  (package bibfmt))
 
 (executable
  (name bibdedup)
  (public_name bibdedup)
+ (modules bibdedup)
  (libraries cmdliner bibfmt unix)
  (package bibfmt))
