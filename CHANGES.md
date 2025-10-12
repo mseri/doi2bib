@@ -1,4 +1,4 @@
-# CURRENT
+# 0.7.9 (2025-10-12) 
 
 - bibfmt: added --quiet flag to suppress all output except errors.
 - bibfmt: added --force flag to ignore parsing errors and output only
