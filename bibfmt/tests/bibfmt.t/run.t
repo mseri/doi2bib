@@ -425,6 +425,60 @@ Test mixed UTF-8 with BibTeX special characters and escapes
     PUBLISHER = "Éditions Académiques & Co."
   }
 
+Test citation keys with slashes and dots (DBLP-style)
+  $ cat > dblp_keys.bib << EOF
+  > @inproceedings{DBLP:conf/opodis/Lamport02,
+  >   author = {Leslie Lamport},
+  >   title = {Paxos Made Simple, Fast, and Byzantine},
+  >   year = {2002}
+  > }
+  > 
+  > @article{DBLP:journals/cacm/Knuth74,
+  >   author = {Donald E. Knuth},
+  >   title = {Computer Programming as an Art},
+  >   journal = {Commun. ACM},
+  >   year = {1974}
+  > }
+  > 
+  > @misc{example.2024.01.15,
+  >   author = {Example Author},
+  >   title = {Example with dots and numbers},
+  >   year = {2024}
+  > }
+  > 
+  > @book{test_with-all:valid/chars.123,
+  >   author = {Test Author},
+  >   title = {Testing all valid identifier characters},
+  >   year = {2023}
+  > }
+  > EOF
+
+  $ bibfmt -f dblp_keys.bib
+  @inproceedings{DBLP:conf/opodis/Lamport02,
+    AUTHOR = {Leslie Lamport},
+    TITLE  = {Paxos Made Simple, Fast, and Byzantine},
+    YEAR   = {2002}
+  }
+  
+  @article{DBLP:journals/cacm/Knuth74,
+    AUTHOR  = {Donald E. Knuth},
+    TITLE   = {Computer Programming as an Art},
+    JOURNAL = {Commun. ACM},
+    YEAR    = {1974}
+  }
+  
+  @misc{example.2024.01.15,
+    AUTHOR = {Example Author},
+    TITLE  = {Example with dots and numbers},
+    YEAR   = {2024}
+  }
+  
+  @book{test_with-all:valid/chars.123,
+    AUTHOR = {Test Author},
+    TITLE  = {Testing all valid identifier characters},
+    YEAR   = {2023}
+  }
+
 Test duplicate citekey detection with case-insensitive comparison in strict mode
   $ cat > duplicates.bib << EOF
   > @article{test1,

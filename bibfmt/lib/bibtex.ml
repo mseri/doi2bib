@@ -211,7 +211,9 @@ let take_while1 pred input pos =
 let is_alpha c = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 let is_digit c = c >= '0' && c <= '9'
 let is_alnum c = is_alpha c || is_digit c
-let is_ident_char c = is_alnum c || c = '_' || c = '-' || c = ':'
+
+let is_ident_char c =
+  is_alnum c || c = '_' || c = '-' || c = ':' || c = '/' || c = '.'
 
 (* More permissive field name parser to handle dots, plus signs, etc. *)
 let is_field_name_char c =
@@ -860,5 +862,3 @@ let find_duplicate_groups ?(keys = [ "title"; "author"; "year" ]) entries =
         Some { entries = group_entries; matching_keys = key_values; conflicts }
       else None)
     grouped
-
-
