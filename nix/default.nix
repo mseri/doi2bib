@@ -24,6 +24,7 @@ buildDunePackage {
   OCAMLFIND_TOOLCHAIN = crossName;
   propagatedBuildInputs = [
     astring
+    bibfmt
     cohttp-lwt-unix
     cmdliner
     clz
