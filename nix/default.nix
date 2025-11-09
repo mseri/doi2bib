@@ -4,6 +4,7 @@
 , static ? false
 , nix-filter
 , crossName ? null
+, bibfmt
 }:
 
 with ocamlPackages;
@@ -17,12 +18,12 @@ buildDunePackage {
       "dune-project"
       "doi2bib.opam"
       "doi2bib"
-      "bibfmt"
     ];
   };
 
   OCAMLFIND_TOOLCHAIN = crossName;
   propagatedBuildInputs = [
+    bibfmt
     astring
     cohttp-lwt-unix
     cmdliner

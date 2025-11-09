@@ -31,9 +31,9 @@ buildDunePackage {
       ${if static then "static" else "release"} build\
       ${if crossName != null then "for ${crossName}" else ""}"
 
-    dune build bibfmt/bin/bibfmt.exe -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
+    dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
   '';
-  installPhase = ''
+  postInstallPhase = ''
     mkdir -p $out/bin
     mv _build/default/bibfmt/bin/bibfmt.exe $out/bin/bibfmt
   '';
