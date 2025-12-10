@@ -27,6 +27,43 @@ let process_id outfile id =
       Lwt_io.with_file ~mode:Output ~flags outfile (fun oc ->
           Lwt_io.write_line oc formatted)
 
+let process_ids outfile ids =
+  let open Lwt.Syntax in
+  let process_single error_count id =
+    Lwt.catch
+      (fun () ->
+        let* () = process_id outfile id in
+        Lwt.return error_count)
+      (fun e ->
+        let error_msg =
+          match e with
+          | Http.PubMed_DOI_not_found ->
+              Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
+          | Http.Entry_not_found ->
+              Printf.sprintf
+                "Error: unable to find any bibtex entry for %s.\n\
+                 Check the ID before trying again.\n"
+                id
+          | Failure s -> Printf.sprintf "Unexpected error for %s: %s\n" id s
+          | Http.Bad_gateway ->
+              Printf.sprintf
+                "Remote server error for %s: wait some time and try again.\n\
+                 This error tends to happen when the remote servers are busy.\n"
+                id
+          | Parser.Parse_error parsed_id ->
+              Printf.sprintf
+                "Error: unable to parse ID: '%s'.\n\
+                 You can force me to consider it by prepending 'doi:', \
+                 'arxiv:' or 'PMC' as appropriate.\n"
+                parsed_id
+          | _ -> Printf.sprintf "Error for %s: %s\n" id (Printexc.to_string e)
+        in
+        let* () = Lwt_io.eprintf "%s" error_msg in
+        Lwt.return (error_count + 1))
+  in
+
+  Lwt_list.fold_left_s process_single 0 ids
+
 let process_file outfile infile =
   let open Lwt.Syntax in
   let lines ic =
@@ -67,38 +104,23 @@ let process_file outfile infile =
       let* () = Lwt_seq.iter_s process (lines ic) in
       write_out ())
 
-let doi2bib id file outfile =
-  match (id, file) with
-  | None, "" -> `Help (`Pager, None)
-  | None, infile -> (
+let doi2bib ids file outfile =
+  match (ids, file) with
+  | [], "" -> `Help (`Pager, None)
+  | [], infile -> (
       match Lwt_main.run (process_file outfile infile) with
       | () -> `Ok ()
       | exception e -> err @@ Printexc.to_string e)
-  | Some id, "" -> (
-      match Lwt_main.run (process_id outfile id) with
-      | () -> `Ok ()
-      | exception Http.PubMed_DOI_not_found ->
-          err @@ Printf.sprintf "Error: unable to find a DOI entry for %s.\n" id
-      | exception Http.Entry_not_found ->
+  | ids, "" -> (
+      match Lwt_main.run (process_ids outfile ids) with
+      | 0 -> `Ok ()
+      | error_count ->
           err
           @@ Printf.sprintf
-               "Error: unable to find any bibtex entry for %s.\n\
-                Check the ID before trying again.\n"
-               id
-      | exception Failure s -> err @@ Printf.sprintf "Unexpected error. %s\n" s
-      | exception Http.Bad_gateway ->
-          err
-          @@ Printf.sprintf
-               "Remote server error: wait some time and try again.\n\
-                This error tends to happen when the remote servers are busy.\n"
-      | exception Parser.Parse_error id ->
-          err
-          @@ Printf.sprintf
-               "Error: unable to parse ID: '%s'.\n\
-                You can force me to consider it by prepending 'doi:', 'arxiv:' \
-                or 'PMC' as appropriate.\n"
-               id)
-  | Some _, _ -> `Help (`Pager, None)
+               "Completed with %d error(s). See stderr for details.\n"
+               error_count
+      | exception e -> err @@ Printexc.to_string e)
+  | _, _ -> `Help (`Pager, None)
 
 let () =
   let open Cmdliner in
@@ -118,17 +140,18 @@ let () =
     Arg.(
       value & opt string "stdout" & info [ "o"; "output" ] ~docv:"OUTPUT" ~doc)
   in
-  let id =
+  let ids =
     let doc =
       "A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically \
        infer what kind of ID you are using. You can force the cli to lookup a \
        DOI by using the form 'doi:ID' or an arXiv ID by using the form \
        'arXiv:ID'.\n\
-       PubMed IDs always start with 'PMC'."
+       PubMed IDs always start with 'PMC'. Multiple IDs can be provided and \
+       will be processed in order."
     in
-    Arg.(value & pos 0 (some string) None & info ~docv:"ID" ~doc [])
+    Arg.(value & pos_all string [] & info ~docv:"ID" ~doc [])
   in
-  let doi2bib_t = Term.(ret (const doi2bib $ id $ file $ out)) in
+  let doi2bib_t = Term.(ret (const doi2bib $ ids $ file $ out)) in
   let info =
     let doc =
       "A little CLI tool to get the bibtex entry for a given DOI, arXiv or \
