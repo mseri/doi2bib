@@ -1,82 +1,101 @@
 let err s = `Error (false, s)
 
-let bibfmt file out strict quiet force =
-  let main () =
-    let file = if file = "" then "stdin" else file in
+let read_input file =
+  let open In_channel in
+  if file = "-" then input_all stdin
+  else with_open_text file (fun ic -> input_all ic)
 
-    let read_input () =
-      let open In_channel in
-      if file = "stdin" then input_all stdin
-      else with_open_text file (fun ic -> input_all ic)
-    in
+let bibfmt out strict quiet force files =
+  if files = [] then
+    err "No input files specified. Use --help for usage information."
+  else
+    try
+      let contents =
+        List.fold_left
+          (fun acc file ->
+            match acc with
+            | Error _ as e -> e
+            | Ok contents -> (
+                try
+                  let content = read_input file in
+                  let file_label = if file = "-" then "stdin" else file in
+                  if not quiet then Printf.eprintf "  Read %s\n" file_label;
+                  Ok (content :: contents)
+                with e ->
+                  Error
+                    (Printf.sprintf "Failed to read '%s': %s" file
+                       (Printexc.to_string e))))
+          (Ok []) files
+      in
 
-    let content = read_input () in
-    let parse_result = Bibtex.parse_bibtex_with_errors content in
+      match contents with
+      | Error msg -> err msg
+      | Ok contents ->
+          let combined_content = String.concat "\n\n" (List.rev contents) in
+          let parse_result = Bibtex.parse_bibtex_with_errors combined_content in
 
-    let formatted =
-      if Bibtex.has_parse_errors parse_result then
-        if force then (
-          Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
-          List.iter
-            (fun error ->
-              Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line error.message)
-            (Bibtex.get_parse_errors parse_result);
-          Printf.eprintf
-            "Please check your BibTeX syntax or raise an issue at \
-             https://github.com/mseri/doi2bib/issues\n\
-             Continuing with successfully parsed entries...\n\
-             %!";
-          if parse_result.items = [] then (
-            Printf.eprintf
-              "Warning: No valid BibTeX entries found in the file.\n%!";
-            content)
-          else
-            let options = { Bibtex.default_options with strict } in
-            Bibtex.pretty_print_bibtex ~options parse_result.items)
-        else (
-          Printf.eprintf "Warning: Found parsing errors in the BibTeX file:\n";
-          List.iter
-            (fun error ->
-              Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line error.message)
-            (Bibtex.get_parse_errors parse_result);
-          Printf.eprintf
-            "Please check your BibTeX syntax or raise an issue at \
-             https://github.com/mseri/doi2bib/issues\n\
-             Returning unformatted content.\n\
-             %!";
-          content)
-      else if parse_result.items = [] then (
-        Printf.eprintf
-          "Warning: No valid BibTeX entries found in the file. Please raise an \
-           issue at https://github.com/mseri/doi2bib/issues\n\
-           %!";
-        content)
-      else
-        let options = { Bibtex.default_options with strict } in
-        Bibtex.pretty_print_bibtex ~options parse_result.items
-    in
+          let formatted =
+            if Bibtex.has_parse_errors parse_result then
+              if force then (
+                Printf.eprintf
+                  "Warning: Found parsing errors in the BibTeX file:\n";
+                List.iter
+                  (fun error ->
+                    Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line
+                      error.message)
+                  (Bibtex.get_parse_errors parse_result);
+                Printf.eprintf
+                  "Please check your BibTeX syntax or raise an issue at \
+                   https://github.com/mseri/doi2bib/issues\n\
+                   Continuing with successfully parsed entries...\n\
+                   %!";
+                if parse_result.items = [] then (
+                  Printf.eprintf
+                    "Warning: No valid BibTeX entries found in the file.\n%!";
+                  combined_content)
+                else
+                  let options = { Bibtex.default_options with strict } in
+                  Bibtex.pretty_print_bibtex ~options parse_result.items)
+              else (
+                Printf.eprintf
+                  "Warning: Found parsing errors in the BibTeX file:\n";
+                List.iter
+                  (fun error ->
+                    Printf.eprintf "  - Line %d: %s\n" error.Bibtex.line
+                      error.message)
+                  (Bibtex.get_parse_errors parse_result);
+                Printf.eprintf
+                  "Please check your BibTeX syntax or raise an issue at \
+                   https://github.com/mseri/doi2bib/issues\n\
+                   Returning unformatted content.\n\
+                   %!";
+                combined_content)
+            else if parse_result.items = [] then (
+              Printf.eprintf
+                "Warning: No valid BibTeX entries found in the file. Please \
+                 raise an issue at https://github.com/mseri/doi2bib/issues\n\
+                 %!";
+              combined_content)
+            else
+              let options = { Bibtex.default_options with strict } in
+              Bibtex.pretty_print_bibtex ~options parse_result.items
+          in
 
-    match out with
-    | "stdout" -> if not quiet then print_string formatted
-    | _ ->
-        Out_channel.(with_open_text out (fun oc -> output_string oc formatted))
-  in
-  try
-    main ();
-    `Ok ()
-  with e -> err @@ Printexc.to_string e
+          (match out with
+          | "stdout" -> if not quiet then print_string formatted
+          | _ ->
+              Out_channel.(
+                with_open_text out (fun oc -> output_string oc formatted)));
+          `Ok ()
+    with e -> err @@ Printexc.to_string e
 
 let () =
   let open Cmdliner in
-  let file =
-    let doc =
-      "Reads the bib content from the specified file instead of the standard \
-       input."
-    in
-    Arg.(value & opt string "" & info [ "f"; "file" ] ~docv:"FILE" ~doc)
-  in
   let out =
-    let doc = "Saves the pretty printed bib to the specified file." in
+    let doc =
+      "Saves the pretty printed bib to the specified file. If not specified, \
+       writes to stdout."
+    in
     Arg.(
       value & opt string "stdout" & info [ "o"; "output" ] ~docv:"OUTPUT" ~doc)
   in
@@ -96,15 +115,38 @@ let () =
       "Force mode: ignore parsing errors and output only successfully parsed \
        entries."
     in
-    Arg.(value & flag & info [ "force" ] ~doc)
+    Arg.(value & flag & info [ "f"; "force" ] ~doc)
+  in
+  let files =
+    let doc =
+      "BibTeX files to format. Use '-' to read from stdin. Multiple files can \
+       be specified and will be combined."
+    in
+    Arg.(value & pos_all string [] & info [] ~docv:"FILES" ~doc)
   in
   let bibfmt_t =
-    Term.(ret (const bibfmt $ file $ out $ strict $ quiet $ force))
+    Term.(ret (const bibfmt $ out $ strict $ quiet $ force $ files))
   in
   let info =
     let doc = "A little CLI tool to pretty print bibtex files." in
     let man =
       [
+        `S Manpage.s_description;
+        `P
+          "$(tname) reads one or more BibTeX files, parses them, and outputs \
+           formatted BibTeX entries.";
+        `P "Use '-' as a filename to read from stdin.";
+        `S Manpage.s_examples;
+        `P "Format a single file:";
+        `Pre "  $(tname) bibliography.bib -o formatted.bib";
+        `P "Format multiple files:";
+        `Pre "  $(tname) file1.bib file2.bib -o combined.bib";
+        `P "Read from stdin:";
+        `Pre "  cat input.bib | $(tname) -";
+        `P "Combine stdin with files:";
+        `Pre "  echo '@article{...}' | $(tname) - existing.bib -o output.bib";
+        `P "Format with strict mode:";
+        `Pre "  $(tname) --strict bibliography.bib";
         `S Manpage.s_bugs;
         `P "Report bugs to https://github.com/mseri/doi2bib/issues";
       ]

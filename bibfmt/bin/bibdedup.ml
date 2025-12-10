@@ -4,7 +4,6 @@ let parse_keys keys_str =
   if keys_str = "" then [ "title"; "author"; "year" ]
   else String.split_on_char ',' keys_str |> List.map String.trim
 
-(* Display a conflict to the user *)
 let display_conflict conflict =
   Printf.printf "\nConflict in field '%s':\n" conflict.Bibtex.field_name;
   List.iteri
@@ -13,7 +12,6 @@ let display_conflict conflict =
     conflict.Bibtex.values;
   flush stdout
 
-(* Prompt user to choose which value to keep *)
 let prompt_user_choice conflict =
   let num_options = List.length conflict.Bibtex.values in
   let rec get_choice () =
@@ -150,7 +148,8 @@ let deduplicate_entries ?(keys = [ "title"; "author"; "year" ])
     List.iter
       (fun group ->
         List.iter
-          (fun entry -> Hashtbl.add duplicate_entries entry.Bibtex.citekey entry)
+          (fun entry ->
+            Hashtbl.add duplicate_entries entry.Bibtex.citekey entry)
           group.Bibtex.entries)
       duplicate_groups;
 
@@ -175,7 +174,9 @@ let deduplicate_entries ?(keys = [ "title"; "author"; "year" ])
 let read_file filename =
   try
     let content =
-      In_channel.with_open_text filename (fun ic -> In_channel.input_all ic)
+      if filename = "-" then In_channel.input_all stdin
+      else
+        In_channel.with_open_text filename (fun ic -> In_channel.input_all ic)
     in
     Ok content
   with e ->
@@ -204,7 +205,10 @@ let bibdedup keys_str interactive strict output files =
             | Ok contents -> (
                 match read_file filename with
                 | Ok content ->
-                    Printf.eprintf "  ✓ Read %s\n" filename;
+                    let file_label =
+                      if filename = "-" then "stdin" else filename
+                    in
+                    Printf.eprintf "  Read %s\n" file_label;
                     flush stderr;
                     Ok (content :: contents)
                 | Error msg -> Error msg))
@@ -313,8 +317,11 @@ let () =
       value & opt string "stdout" & info [ "o"; "output" ] ~docv:"OUTPUT" ~doc)
   in
   let files =
-    let doc = "BibTeX files to deduplicate." in
-    Arg.(value & pos_all file [] & info [] ~docv:"FILES" ~doc)
+    let doc =
+      "BibTeX files to deduplicate. Use '-' to read from stdin. Multiple file \
+       names can be specified."
+    in
+    Arg.(value & pos_all string [] & info [] ~docv:"FILES" ~doc)
   in
   let bibdedup_t =
     Term.(ret (const bibdedup $ keys $ interactive $ strict $ output $ files))
@@ -336,6 +343,10 @@ let () =
         `Pre "  $(tname) bibliography.bib -o clean.bib";
         `P "Deduplicate multiple files using DOI:";
         `Pre "  $(tname) --keys doi file1.bib file2.bib -o merged.bib";
+        `P "Read from stdin:";
+        `Pre "  cat input.bib | $(tname) -";
+        `P "Combine stdin with files:";
+        `Pre "  cat extra.bib | $(tname) - existing.bib -o output.bib";
         `P "Deduplicate using citekey with interactive conflict resolution:";
         `Pre "  $(tname) --keys citekey --interactive *.bib -o output.bib";
         `P "Deduplicate with strict mode (reports duplicate fields):";

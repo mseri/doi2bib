@@ -104,11 +104,11 @@ let () =
   let open Cmdliner in
   let file =
     let doc =
-      "With this flag, the tool reads the file and process its lines \
-       sequentially, treating them as DOIs, arXiv IDs or PubMedIDs. Errors \
-       will be printed on standard error but will not terminate the operation."
+      "The file is read line by line and processed sequentially, treating each \
+       line as DOIs, arXiv IDs or PubMedIDs. Errors will be printed on \
+       standard error but will not terminate the operation."
     in
-    Arg.(value & opt string "" & info [ "f"; "file" ] ~docv:"FILE" ~doc)
+    Arg.(value & opt string "" & info [ "i"; "input" ] ~docv:"FILE" ~doc)
   in
   let out =
     let doc =

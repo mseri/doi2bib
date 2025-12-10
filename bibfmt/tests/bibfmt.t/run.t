@@ -11,7 +11,7 @@ Test basic formatting of BibTeX entries by reading from a file
   > }
   > EOF
 
-  $ bibfmt -f example.bib
+  $ bibfmt example.bib
   @article{Bravetti_2020,
     TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
     VOLUME    = "132",
@@ -24,6 +24,7 @@ Test basic formatting of BibTeX entries by reading from a file
     AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
     YEAR      = "2020"
   }
+    Read example.bib
 
 Test formatting BibTeX with braces instead of quotes
   $ cat > braces.bib << EOF
@@ -42,7 +43,7 @@ Test formatting BibTeX with braces instead of quotes
   > }
   > EOF
 
-  $ bibfmt -f braces.bib
+  $ bibfmt braces.bib
   @article{Albert_1989,
     TITLE     = {Le théorème de réduction de Marsden-Weinstein en géométrie cosymplectique et de contact},
     VOLUME    = {6},
@@ -56,9 +57,11 @@ Test formatting BibTeX with braces instead of quotes
     YEAR      = {1989},
     PAGES     = {627-649}
   }
+    Read braces.bib
 
 Test writing to output file
-  $ bibfmt -f example.bib -o formatted.bib
+  $ bibfmt example.bib -o formatted.bib
+    Read example.bib
   $ cat formatted.bib
   @article{Bravetti_2020,
     TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
@@ -102,6 +105,7 @@ Test handling of multiple entries
     YEAR      = 2021,
     PUBLISHER = "Some Publisher"
   }
+    Read multiple.bib
 
 Test handling comments in BibTeX file
   $ cat > comments.bib << EOF
@@ -115,7 +119,7 @@ Test handling comments in BibTeX file
   > % Another comment at the end
   > EOF
 
-  $ bibfmt -f comments.bib
+  $ bibfmt comments.bib
   % This is a comment
   @article{CommentTest,
     TITLE  = "Entry with comments",
@@ -124,7 +128,7 @@ Test handling comments in BibTeX file
     YEAR   = 2022
   }
   
-  % Another comment at the end
+  % Another comment at the end  Read comments.bib
 
 Test handling of entries with special characters
   $ cat > special.bib << EOF
@@ -139,7 +143,7 @@ Test handling of entries with special characters
   > }
   > EOF
 
-  $ bibfmt -f special.bib
+  $ bibfmt special.bib
   @article{SpecialChars,
     TITLE   = "Übungen zur Quantenmechanik",
     AUTHOR  = "Müller, J and Gómez, A",
@@ -149,9 +153,10 @@ Test handling of entries with special characters
     PAGES   = "23--45",
     YEAR    = "2022"
   }
+    Read special.bib
 
 Test handling of stdin input
-  $ cat example.bib | bibfmt
+  $ cat example.bib | bibfmt -
   @article{Bravetti_2020,
     TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
     VOLUME    = "132",
@@ -164,6 +169,7 @@ Test handling of stdin input
     AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
     YEAR      = "2020"
   }
+    Read stdin
 
 Test parsing of malformed BibTeX (should produce a warning but attempt to return original content)
   $ cat > malformed.bib << EOF
@@ -172,10 +178,12 @@ Test parsing of malformed BibTeX (should produce a warning but attempt to return
   > EOF
 
   $ bibfmt -f malformed.bib
+    Read malformed.bib
   Warning: Found parsing errors in the BibTeX file:
     - Line 1: Failed to parse entry starting at line 1
   Please check your BibTeX syntax or raise an issue at https://github.com/mseri/doi2bib/issues
-  Returning unformatted content.
+  Continuing with successfully parsed entries...
+  Warning: No valid BibTeX entries found in the file.
   @article{Malformed,
     title = "Incomplete entry without closing brace"
 
@@ -197,6 +205,7 @@ Test handling of entries with unquoted values like month abbreviations
     JOURNAL = "Some Journal",
     YEAR    = 2023
   }
+    Read unquoted.bib
 
 Test URL unescaping in URL fields
   $ cat > url_escaping.bib << EOF
@@ -208,13 +217,14 @@ Test URL unescaping in URL fields
   > }
   > EOF
 
-  $ bibfmt -f url_escaping.bib
+  $ bibfmt url_escaping.bib
   @article{URLEscapeTest,
     TITLE  = "Test URL Unescaping",
     AUTHOR = "Test Author",
     YEAR   = 2023,
     URL    = "https://doi.org/10.1234/test(example)<path>:port;query"
   }
+    Read url_escaping.bib
 
 Test URL unescaping with braced values
   $ cat > url_braced.bib << EOF
@@ -226,13 +236,14 @@ Test URL unescaping with braced values
   > }
   > EOF
 
-  $ bibfmt -f url_braced.bib
+  $ bibfmt url_braced.bib
   @article{URLBracedTest,
     TITLE  = {Test URL Unescaping with Braces},
     AUTHOR = {Test Author},
     YEAR   = 2023,
     URL    = {https://example.com/api(v1)}
   }
+    Read url_braced.bib
 
 Test that non-URL fields are not affected by URL unescaping
   $ cat > non_url_fields.bib << EOF
@@ -245,7 +256,7 @@ Test that non-URL fields are not affected by URL unescaping
   > }
   > EOF
 
-  $ bibfmt -f non_url_fields.bib
+  $ bibfmt non_url_fields.bib
   @article{NonURLTest,
     TITLE  = "Title with %2F and %28 percent escapes",
     AUTHOR = "Author %29 with escapes",
@@ -253,6 +264,7 @@ Test that non-URL fields are not affected by URL unescaping
     YEAR   = 2023,
     URL    = "https://example.com/path(test)"
   }
+    Read non_url_fields.bib
 
 Test comma placement with percent characters in field values
   $ cat > percent_comma.bib << EOF
@@ -264,13 +276,14 @@ Test comma placement with percent characters in field values
   > }
   > EOF
 
-  $ bibfmt -f percent_comma.bib
+  $ bibfmt percent_comma.bib
   @article{PercentCommaTest,
     TITLE   = "Field with %percent signs",
     AUTHOR  = "Another %field with %signs",
     JOURNAL = "Journal Name",
     YEAR    = 2023
   }
+    Read percent_comma.bib
 
 Test proper comma handling with comments and percent fields
   $ cat > mixed_percent.bib << EOF
@@ -285,7 +298,7 @@ Test proper comma handling with comments and percent fields
   > }
   > EOF
 
-  $ bibfmt -f mixed_percent.bib
+  $ bibfmt mixed_percent.bib
   @article{MixedPercentTest,
     TITLE  = "Title with %signs",
     % This is a comment that should not get a comma
@@ -295,6 +308,7 @@ Test proper comma handling with comments and percent fields
     YEAR   = 2023,
     URL    = "https://test.com/path"
   }
+    Read mixed_percent.bib
 
 Test URL field with mixed case (should still be unescaped)
   $ cat > url_case.bib << EOF
@@ -307,7 +321,7 @@ Test URL field with mixed case (should still be unescaped)
   > }
   > EOF
 
-  $ bibfmt -f url_case.bib
+  $ bibfmt url_case.bib
   @article{URLCaseTest,
     TITLE  = "Test URL Case Sensitivity",
     AUTHOR = "Test Author",
@@ -315,9 +329,11 @@ Test URL field with mixed case (should still be unescaped)
     URL    = "https://another.com:port/path",
     YEAR   = 2023
   }
+    Read url_case.bib
 
 Test that strict mode fails if a field is repeated
-  $ bibfmt --strict -f url_case.bib
+  $ bibfmt --strict url_case.bib
+    Read url_case.bib
   bibfmt: Failure("Duplicate fields found in entry: URLCaseTest")
   [124]
 
@@ -331,13 +347,14 @@ Test complex URL with all supported escape sequences
   > }
   > EOF
 
-  $ bibfmt -f url_complete.bib
+  $ bibfmt url_complete.bib
   @article{URLCompleteTest,
     TITLE  = "Complete URL Escape Test",
     AUTHOR = "Test Author",
     YEAR   = 2023,
     URL    = "https://dx.doi.org/10.1016/j.example.2023.01.001?ref&token:abc(def)<ghi>;jkl"
   }
+    Read url_complete.bib
 
 Test UTF-8 multi-byte characters in quoted strings
   $ cat > utf8_quoted.bib << EOF
@@ -350,7 +367,7 @@ Test UTF-8 multi-byte characters in quoted strings
   > }
   > EOF
 
-  $ bibfmt -f utf8_quoted.bib
+  $ bibfmt utf8_quoted.bib
   @article{UTF8QuotedTest,
     TITLE   = "Étude des caractères spéciaux: café, naïve, résumé",
     AUTHOR  = "Müller, João and García, José",
@@ -358,6 +375,7 @@ Test UTF-8 multi-byte characters in quoted strings
     YEAR    = 2023,
     NOTE    = "Testing UTF-8: ñoël, αβγδε, 中文, русский, العربية"
   }
+    Read utf8_quoted.bib
 
 Test UTF-8 multi-byte characters in braced strings
   $ cat > utf8_braced.bib << EOF
@@ -371,7 +389,7 @@ Test UTF-8 multi-byte characters in braced strings
   > }
   > EOF
 
-  $ bibfmt -f utf8_braced.bib
+  $ bibfmt utf8_braced.bib
   @book{UTF8BracedTest,
     TITLE     = {Αρχαία Ελληνικά: Ancient Greek Text},
     AUTHOR    = {日本語の著者 and Автор на русском},
@@ -380,6 +398,7 @@ Test UTF-8 multi-byte characters in braced strings
     YEAR      = {2023},
     NOTE      = {Mix of scripts: English, Español, Français, Deutsch, العربية, 中文, 日本語, Русский, Ελληνικά}
   }
+    Read utf8_braced.bib
 
 Test UTF-8 characters of different byte lengths
   $ cat > utf8_lengths.bib << EOF
@@ -392,7 +411,7 @@ Test UTF-8 characters of different byte lengths
   > }
   > EOF
 
-  $ bibfmt -f utf8_lengths.bib
+  $ bibfmt utf8_lengths.bib
   @misc{UTF8LengthsTest,
     TITLE        = "UTF-8 byte length test: à (2-byte), € (3-byte), 𝕌 (4-byte)",
     AUTHOR       = "Unicode Specialist",
@@ -400,6 +419,7 @@ Test UTF-8 characters of different byte lengths
     YEAR         = 2023,
     NOTE         = "Emoji test: 🚀 🌟 📚 🔬 💡 🎯"
   }
+    Read utf8_lengths.bib
 
 Test mixed UTF-8 with BibTeX special characters and escapes
   $ cat > utf8_mixed.bib << EOF
@@ -414,7 +434,7 @@ Test mixed UTF-8 with BibTeX special characters and escapes
   > }
   > EOF
 
-  $ bibfmt -f utf8_mixed.bib
+  $ bibfmt utf8_mixed.bib
   @inproceedings{UTF8MixedTest,
     TITLE     = "Título español with \"quotes\" and {braces}",
     AUTHOR    = "Sánchez, María and O'Connor, Seán",
@@ -424,6 +444,7 @@ Test mixed UTF-8 with BibTeX special characters and escapes
     NOTE      = "Special: \&, \%, $, plus UTF-8: café, résumé, naïve, piñata",
     PUBLISHER = "Éditions Académiques & Co."
   }
+    Read utf8_mixed.bib
 
 Test citation keys with slashes and dots (DBLP-style)
   $ cat > dblp_keys.bib << EOF
@@ -500,7 +521,8 @@ Test duplicate citekey detection with case-insensitive comparison in strict mode
   > }
   > EOF
 
-  $ bibfmt --strict -f duplicates.bib
+  $ bibfmt --strict duplicates.bib
+    Read duplicates.bib
   Warning: Duplicate citekeys found (case-insensitive): test1
   @article{test1,
     TITLE  = "First Article",
@@ -521,7 +543,7 @@ Test duplicate citekey detection with case-insensitive comparison in strict mode
   }
 
 Test that non-strict mode doesn't warn about duplicate citekeys
-  $ bibfmt -f duplicates.bib
+  $ bibfmt duplicates.bib
   @article{test1,
     TITLE  = "First Article",
     AUTHOR = "John Doe",
@@ -539,6 +561,7 @@ Test that non-strict mode doesn't warn about duplicate citekeys
     AUTHOR = "Bob Wilson",
     YEAR   = 2022
   }
+    Read duplicates.bib
 
 Test multiple duplicate citekeys in strict mode
   $ cat > multiple_duplicates.bib << EOF
@@ -563,7 +586,8 @@ Test multiple duplicate citekeys in strict mode
   > }
   > EOF
 
-  $ bibfmt --strict -f multiple_duplicates.bib
+  $ bibfmt --strict multiple_duplicates.bib
+    Read multiple_duplicates.bib
   Warning: Duplicate citekeys found (case-insensitive): conference1, paper1
   @article{paper1,
     TITLE  = "First Paper",
@@ -586,7 +610,7 @@ Test multiple duplicate citekeys in strict mode
   }
 
 Test quiet mode suppresses warnings and output
-  $ bibfmt --quiet -f malformed.bib
+  $ bibfmt --quiet malformed.bib
   Warning: Found parsing errors in the BibTeX file:
     - Line 1: Failed to parse entry starting at line 1
   Please check your BibTeX syntax or raise an issue at https://github.com/mseri/doi2bib/issues
@@ -610,7 +634,8 @@ Test force mode outputs only successfully parsed entries
   > }
   > BIBTEX
 
-  $ bibfmt --force -f mixed_valid_invalid.bib
+  $ bibfmt --force mixed_valid_invalid.bib
+    Read mixed_valid_invalid.bib
   Warning: Found parsing errors in the BibTeX file:
     - Line 7: Failed to parse entry starting at line 7
     - Line 7: Skipped unparsable content from line 7 to line 10
