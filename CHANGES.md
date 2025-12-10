@@ -1,6 +1,11 @@
-# CURRENT
+# 0.9.0 (2025-12-10)
 
-- bibfmt: allow `.` and `/` in the citekey
+- bibfmt: reduced default verbosity, introduced --verbose flag to show detailed
+  processing information.
+- (**breaking**) bibfmt and bibdedup: updated CLI flags. Now `bibfmt` directly accepts a list of files. To make it read from stdin, useful for autoformatting, use `-` as filename.
+- doi2bib: now supports processing multiple IDs at once from the command line
+  (e.g., `doi2bib ID1 ID2 ID3`).
+- bibfmt: allow `.` and `/` in the citekey.
 
 # 0.7.9 (2025-10-12)
 
