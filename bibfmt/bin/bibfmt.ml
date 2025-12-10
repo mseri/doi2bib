@@ -5,7 +5,7 @@ let read_input file =
   if file = "-" then input_all stdin
   else with_open_text file (fun ic -> input_all ic)
 
-let bibfmt out strict quiet force files =
+let bibfmt out strict quiet verbose force files =
   if files = [] then
     err "No input files specified. Use --help for usage information."
   else
@@ -19,7 +19,8 @@ let bibfmt out strict quiet force files =
                 try
                   let content = read_input file in
                   let file_label = if file = "-" then "stdin" else file in
-                  if not quiet then Printf.eprintf "  Read %s\n" file_label;
+                  if verbose && not quiet then
+                    Printf.eprintf "  Read %s\n" file_label;
                   Ok (content :: contents)
                 with e ->
                   Error
@@ -72,8 +73,9 @@ let bibfmt out strict quiet force files =
                 combined_content)
             else if parse_result.items = [] then (
               Printf.eprintf
-                "Warning: No valid BibTeX entries found in the file. Please \
-                 raise an issue at https://github.com/mseri/doi2bib/issues\n\
+                "Warning: No valid BibTeX entries found in the file. If the \
+                 bib file is well formed, please raise an issue at \
+                 https://github.com/mseri/doi2bib/issues\n\
                  %!";
               combined_content)
             else
@@ -110,6 +112,10 @@ let () =
     let doc = "Quiet mode: suppress all output except errors." in
     Arg.(value & flag & info [ "q"; "quiet" ] ~doc)
   in
+  let verbose =
+    let doc = "Enable verbose output showing which files are being read." in
+    Arg.(value & flag & info [ "v"; "verbose" ] ~doc)
+  in
   let force =
     let doc =
       "Force mode: ignore parsing errors and output only successfully parsed \
@@ -125,7 +131,7 @@ let () =
     Arg.(value & pos_all string [] & info [] ~docv:"FILES" ~doc)
   in
   let bibfmt_t =
-    Term.(ret (const bibfmt $ out $ strict $ quiet $ force $ files))
+    Term.(ret (const bibfmt $ out $ strict $ quiet $ verbose $ force $ files))
   in
   let info =
     let doc = "A little CLI tool to pretty print bibtex files." in

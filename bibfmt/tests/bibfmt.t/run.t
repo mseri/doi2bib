@@ -24,7 +24,6 @@ Test basic formatting of BibTeX entries by reading from a file
     AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
     YEAR      = "2020"
   }
-    Read example.bib
 
 Test formatting BibTeX with braces instead of quotes
   $ cat > braces.bib << EOF
@@ -43,7 +42,7 @@ Test formatting BibTeX with braces instead of quotes
   > }
   > EOF
 
-  $ bibfmt braces.bib
+  $ bibfmt --verbose braces.bib
   @article{Albert_1989,
     TITLE     = {Le théorème de réduction de Marsden-Weinstein en géométrie cosymplectique et de contact},
     VOLUME    = {6},
@@ -61,7 +60,6 @@ Test formatting BibTeX with braces instead of quotes
 
 Test writing to output file
   $ bibfmt example.bib -o formatted.bib
-    Read example.bib
   $ cat formatted.bib
   @article{Bravetti_2020,
     TITLE     = "Numerical integration in Celestial Mechanics: a case for contact geometry",
@@ -105,7 +103,6 @@ Test handling of multiple entries
     YEAR      = 2021,
     PUBLISHER = "Some Publisher"
   }
-    Read multiple.bib
 
 Test handling comments in BibTeX file
   $ cat > comments.bib << EOF
@@ -128,7 +125,7 @@ Test handling comments in BibTeX file
     YEAR   = 2022
   }
   
-  % Another comment at the end  Read comments.bib
+  % Another comment at the end
 
 Test handling of entries with special characters
   $ cat > special.bib << EOF
@@ -153,7 +150,6 @@ Test handling of entries with special characters
     PAGES   = "23--45",
     YEAR    = "2022"
   }
-    Read special.bib
 
 Test handling of stdin input
   $ cat example.bib | bibfmt -
@@ -169,7 +165,6 @@ Test handling of stdin input
     AUTHOR    = "Bravetti, Alessandro and Seri, Marcello and Vermeeren, Mats and Zadra, Federico",
     YEAR      = "2020"
   }
-    Read stdin
 
 Test parsing of malformed BibTeX (should produce a warning but attempt to return original content)
   $ cat > malformed.bib << EOF
@@ -178,7 +173,6 @@ Test parsing of malformed BibTeX (should produce a warning but attempt to return
   > EOF
 
   $ bibfmt -f malformed.bib
-    Read malformed.bib
   Warning: Found parsing errors in the BibTeX file:
     - Line 1: Failed to parse entry starting at line 1
   Please check your BibTeX syntax or raise an issue at https://github.com/mseri/doi2bib/issues
@@ -205,7 +199,6 @@ Test handling of entries with unquoted values like month abbreviations
     JOURNAL = "Some Journal",
     YEAR    = 2023
   }
-    Read unquoted.bib
 
 Test URL unescaping in URL fields
   $ cat > url_escaping.bib << EOF
@@ -224,7 +217,6 @@ Test URL unescaping in URL fields
     YEAR   = 2023,
     URL    = "https://doi.org/10.1234/test(example)<path>:port;query"
   }
-    Read url_escaping.bib
 
 Test URL unescaping with braced values
   $ cat > url_braced.bib << EOF
@@ -243,7 +235,6 @@ Test URL unescaping with braced values
     YEAR   = 2023,
     URL    = {https://example.com/api(v1)}
   }
-    Read url_braced.bib
 
 Test that non-URL fields are not affected by URL unescaping
   $ cat > non_url_fields.bib << EOF
@@ -264,7 +255,6 @@ Test that non-URL fields are not affected by URL unescaping
     YEAR   = 2023,
     URL    = "https://example.com/path(test)"
   }
-    Read non_url_fields.bib
 
 Test comma placement with percent characters in field values
   $ cat > percent_comma.bib << EOF
@@ -283,7 +273,6 @@ Test comma placement with percent characters in field values
     JOURNAL = "Journal Name",
     YEAR    = 2023
   }
-    Read percent_comma.bib
 
 Test proper comma handling with comments and percent fields
   $ cat > mixed_percent.bib << EOF
@@ -308,7 +297,6 @@ Test proper comma handling with comments and percent fields
     YEAR   = 2023,
     URL    = "https://test.com/path"
   }
-    Read mixed_percent.bib
 
 Test URL field with mixed case (should still be unescaped)
   $ cat > url_case.bib << EOF
@@ -329,11 +317,9 @@ Test URL field with mixed case (should still be unescaped)
     URL    = "https://another.com:port/path",
     YEAR   = 2023
   }
-    Read url_case.bib
 
 Test that strict mode fails if a field is repeated
   $ bibfmt --strict url_case.bib
-    Read url_case.bib
   bibfmt: Failure("Duplicate fields found in entry: URLCaseTest")
   [124]
 
@@ -354,7 +340,6 @@ Test complex URL with all supported escape sequences
     YEAR   = 2023,
     URL    = "https://dx.doi.org/10.1016/j.example.2023.01.001?ref&token:abc(def)<ghi>;jkl"
   }
-    Read url_complete.bib
 
 Test UTF-8 multi-byte characters in quoted strings
   $ cat > utf8_quoted.bib << EOF
@@ -375,7 +360,6 @@ Test UTF-8 multi-byte characters in quoted strings
     YEAR    = 2023,
     NOTE    = "Testing UTF-8: ñoël, αβγδε, 中文, русский, العربية"
   }
-    Read utf8_quoted.bib
 
 Test UTF-8 multi-byte characters in braced strings
   $ cat > utf8_braced.bib << EOF
@@ -398,7 +382,6 @@ Test UTF-8 multi-byte characters in braced strings
     YEAR      = {2023},
     NOTE      = {Mix of scripts: English, Español, Français, Deutsch, العربية, 中文, 日本語, Русский, Ελληνικά}
   }
-    Read utf8_braced.bib
 
 Test UTF-8 characters of different byte lengths
   $ cat > utf8_lengths.bib << EOF
@@ -419,7 +402,6 @@ Test UTF-8 characters of different byte lengths
     YEAR         = 2023,
     NOTE         = "Emoji test: 🚀 🌟 📚 🔬 💡 🎯"
   }
-    Read utf8_lengths.bib
 
 Test mixed UTF-8 with BibTeX special characters and escapes
   $ cat > utf8_mixed.bib << EOF
@@ -444,7 +426,6 @@ Test mixed UTF-8 with BibTeX special characters and escapes
     NOTE      = "Special: \&, \%, $, plus UTF-8: café, résumé, naïve, piñata",
     PUBLISHER = "Éditions Académiques & Co."
   }
-    Read utf8_mixed.bib
 
 Test citation keys with slashes and dots (DBLP-style)
   $ cat > dblp_keys.bib << EOF
@@ -522,7 +503,6 @@ Test duplicate citekey detection with case-insensitive comparison in strict mode
   > EOF
 
   $ bibfmt --strict duplicates.bib
-    Read duplicates.bib
   Warning: Duplicate citekeys found (case-insensitive): test1
   @article{test1,
     TITLE  = "First Article",
@@ -561,7 +541,6 @@ Test that non-strict mode doesn't warn about duplicate citekeys
     AUTHOR = "Bob Wilson",
     YEAR   = 2022
   }
-    Read duplicates.bib
 
 Test multiple duplicate citekeys in strict mode
   $ cat > multiple_duplicates.bib << EOF
@@ -587,7 +566,6 @@ Test multiple duplicate citekeys in strict mode
   > EOF
 
   $ bibfmt --strict multiple_duplicates.bib
-    Read multiple_duplicates.bib
   Warning: Duplicate citekeys found (case-insensitive): conference1, paper1
   @article{paper1,
     TITLE  = "First Paper",
@@ -635,7 +613,6 @@ Test force mode outputs only successfully parsed entries
   > BIBTEX
 
   $ bibfmt --force mixed_valid_invalid.bib
-    Read mixed_valid_invalid.bib
   Warning: Found parsing errors in the BibTeX file:
     - Line 7: Failed to parse entry starting at line 7
     - Line 7: Skipped unparsable content from line 7 to line 10
