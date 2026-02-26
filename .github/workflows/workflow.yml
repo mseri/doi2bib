@@ -15,8 +15,8 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: ncipollo/release-action@v1
         with:
-          tag: true
-          draft: true
+          tag: 
+          draft: ${{ github.ref_name }}
           generateReleaseNotes: true
           prerelease: true
 
