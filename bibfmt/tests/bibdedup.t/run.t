@@ -247,10 +247,10 @@ Test whitespace and case normalization
   
   Deduplication complete: 3 → 2 entries
   @article{test1,
-    TITLE   = { Machine    Learning },
+    TITLE   = {Machine    Learning},
     JOURNAL = {AI Journal},
     YEAR    = {2020},
-    AUTHOR  = { John   Doe }
+    AUTHOR  = {John   Doe}
   }
   
   @article{test3,

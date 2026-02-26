@@ -481,10 +481,20 @@ let has_parse_errors result = result.errors <> []
 let get_parse_errors result = result.errors
 let get_parsed_items result = result.items
 
-type options = { capitalize_names : bool; strict : bool; align_entries : bool }
+type options = {
+  capitalize_names : bool;
+  strict : bool;
+  align_entries : bool;
+  single_line : bool;
+}
 
 let default_options =
-  { capitalize_names = true; strict = false; align_entries = true }
+  {
+    capitalize_names = true;
+    strict = false;
+    align_entries = true;
+    single_line = false;
+  }
 
 (* String replacement helper for Unicode normalization *)
 let replace_string ~pattern ~replacement text =
@@ -554,58 +564,86 @@ let normalize_unicode s =
     replacements;
   !s_ref
 
+(* Collapse \r\n and \n to a single space *)
+let collapse_newlines s =
+  let buf = Buffer.create (String.length s) in
+  let len = String.length s in
+  let i = ref 0 in
+  while !i < len do
+    let c = s.[!i] in
+    if c = '\r' && !i + 1 < len && s.[!i + 1] = '\n' then (
+      Buffer.add_char buf ' ';
+      i := !i + 2)
+    else if c = '\n' || c = '\r' then (
+      Buffer.add_char buf ' ';
+      incr i)
+    else (
+      Buffer.add_char buf c;
+      incr i)
+  done;
+  Buffer.contents buf
+
 (* Pretty printer *)
-let format_field_value = function
+let format_field_value ?(single_line = false) = function
   | QuotedStringValue s ->
-      let normalized_s = normalize_unicode s in
+      let s = if single_line then collapse_newlines s else s in
+      let normalized_s = normalize_unicode (String.trim s) in
       "\"" ^ normalized_s ^ "\""
   | BracedStringValue s ->
-      let normalized_s = normalize_unicode s in
+      let s = if single_line then collapse_newlines s else s in
+      let normalized_s = normalize_unicode (String.trim s) in
       "{" ^ normalized_s ^ "}"
   | UnquotedStringValue s ->
-      let normalized_s = normalize_unicode s in
+      let s = if single_line then collapse_newlines s else s in
+      let normalized_s = normalize_unicode (String.trim s) in
       "{" ^ normalized_s ^ "}"
   | NumberValue n -> string_of_int n
 
-let format_field_value_with_url_unescaping field_name field_value =
+let format_field_value_with_url_unescaping ?(single_line = false) field_name
+    field_value =
   if String.lowercase_ascii field_name = "url" then
     match field_value with
     | QuotedStringValue s ->
-        let unescaped_s = unescape_url s in
+        let s = if single_line then collapse_newlines s else s in
+        let unescaped_s = unescape_url (String.trim s) in
         let normalized_s = normalize_unicode unescaped_s in
         "\"" ^ normalized_s ^ "\""
     | BracedStringValue s ->
-        let unescaped_s = unescape_url s in
+        let s = if single_line then collapse_newlines s else s in
+        let unescaped_s = unescape_url (String.trim s) in
         let normalized_s = normalize_unicode unescaped_s in
         "{" ^ normalized_s ^ "}"
     | UnquotedStringValue s ->
-        let unescaped_s = unescape_url s in
+        let s = if single_line then collapse_newlines s else s in
+        let unescaped_s = unescape_url (String.trim s) in
         let normalized_s = normalize_unicode unescaped_s in
         "{" ^ normalized_s ^ "}"
     | NumberValue n -> string_of_int n
-  else format_field_value field_value
+  else format_field_value ~single_line field_value
 
 let format_entry_name capitalized name =
   if capitalized then String.uppercase_ascii name else name
 
-let format_field_with_padding capitalized field max_width =
+let format_field_with_padding capitalized single_line field max_width =
   let padding = String.make (max_width - String.length field.name) ' ' in
   let name = format_entry_name capitalized field.name in
   "  " ^ name ^ padding ^ " = "
-  ^ format_field_value_with_url_unescaping field.name field.value
+  ^ format_field_value_with_url_unescaping ~single_line field.name field.value
 
-let format_field capitalized field =
+let format_field capitalized single_line field =
   "  "
   ^ format_entry_name capitalized field.name
   ^ " = "
-  ^ format_field_value_with_url_unescaping field.name field.value
+  ^ format_field_value_with_url_unescaping ~single_line field.name field.value
 
-let format_entry_content_with_padding capitalized max_width = function
-  | Field field -> format_field_with_padding capitalized field max_width
+let format_entry_content_with_padding capitalized single_line max_width =
+  function
+  | Field field ->
+      format_field_with_padding capitalized single_line field max_width
   | EntryComment comment -> "  %" ^ comment
 
-let format_entry_content capitalized = function
-  | Field field -> format_field capitalized field
+let format_entry_content capitalized single_line = function
+  | Field field -> format_field capitalized single_line field
   | EntryComment comment -> "  %" ^ comment
 
 let format_entry options entry =
@@ -639,8 +677,9 @@ let format_entry options entry =
             | EntryComment _ -> acc)
           0 entry.contents
       in
-      format_entry_content_with_padding options.capitalize_names max_field_width
-    else format_entry_content options.capitalize_names
+      format_entry_content_with_padding options.capitalize_names
+        options.single_line max_field_width
+    else format_entry_content options.capitalize_names options.single_line
   in
   let entry_type_str = string_of_entry_type entry.entry_type in
   let header = "@" ^ entry_type_str ^ "{" ^ entry.citekey in

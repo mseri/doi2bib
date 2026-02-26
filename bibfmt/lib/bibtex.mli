@@ -87,17 +87,24 @@ val get_parsed_items : parse_result -> bibtex_item list
 
 (** {2 Pretty Printers} *)
 
-type options = { capitalize_names : bool; strict : bool; align_entries : bool }
+type options = {
+  capitalize_names : bool;
+  strict : bool;
+  align_entries : bool;
+  single_line : bool;
+}
 (** Options for parsing and formatting BibTeX entries:
     - [capitalize_names]: If true, the field names are made upper capital.
     - [strict]: If true, parsing will be stricter and reject bibtex files with
       duplicate fields.
     - [align_entries]: If true, entries name and equal signs will be aligned for
-      better readability. *)
+      better readability.
+    - [single_line]: If true, newlines within field values are replaced with a
+      space, forcing each value onto a single line. *)
 
 val default_options : options
 (** Default formatting options for BibTeX entries: [capitalize_names: true],
-    [strict: false], [align_entries: true] *)
+    [strict: false], [align_entries: true], [single_line: false] *)
 
 val pretty_print_bibtex : ?options:options -> bibtex_item list -> string
 (** [pretty_print_bibtex items] formats a list of BibTeX items into a complete
@@ -125,27 +132,30 @@ val entry_type_of_string : string -> entry_type
     @return The corresponding entry type
     @raise Invalid_argument if the string is not a recognized entry type *)
 
-val format_field_value : field_value -> string
+val format_field_value : ?single_line:bool -> field_value -> string
 (** [format_field_value value] formats a field value for output.
+    @param single_line If true, newlines in the value are replaced with a space
     @param value The field value to format
     @return String representation of the value *)
 
-val format_field_value_with_url_unescaping : string -> field_value -> string
+val format_field_value_with_url_unescaping :
+  ?single_line:bool -> string -> field_value -> string
 (** [format_field_value_with_url_unescaping field_name value] formats a field
     value with URL unescaping and Unicode normalization applied. Special
     handling is applied to URL fields.
+    @param single_line If true, newlines in the value are replaced with a space
     @param field_name
       The name of the field (used to determine if URL processing is needed)
     @param value The field value to format
     @return String representation with URLs unescaped if applicable *)
 
-val format_field : bool -> field -> string
-(** [format_field field] formats a complete field (name = value).
+val format_field : bool -> bool -> field -> string
+(** [format_field capitalized single_line field] formats a complete field (name = value).
     @param field The field to format
     @return String representation of the field *)
 
-val format_entry_content : bool -> entry_content -> string
-(** [format_entry_content content] formats entry content (field or comment).
+val format_entry_content : bool -> bool -> entry_content -> string
+(** [format_entry_content capitalized single_line content] formats entry content (field or comment).
     @param content The entry content to format
     @return String representation of the content *)
 

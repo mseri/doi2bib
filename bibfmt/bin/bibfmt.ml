@@ -5,7 +5,7 @@ let read_input file =
   if file = "-" then input_all stdin
   else with_open_text file (fun ic -> input_all ic)
 
-let bibfmt out strict quiet verbose force files =
+let bibfmt out strict single_line quiet verbose force files =
   if files = [] then
     err "No input files specified. Use --help for usage information."
   else
@@ -55,7 +55,9 @@ let bibfmt out strict quiet verbose force files =
                     "Warning: No valid BibTeX entries found in the file.\n%!";
                   combined_content)
                 else
-                  let options = { Bibtex.default_options with strict } in
+                   let options =
+                    { Bibtex.default_options with strict; single_line }
+                  in
                   Bibtex.pretty_print_bibtex ~options parse_result.items)
               else (
                 Printf.eprintf
@@ -79,7 +81,9 @@ let bibfmt out strict quiet verbose force files =
                  %!";
               combined_content)
             else
-              let options = { Bibtex.default_options with strict } in
+              let options =
+                { Bibtex.default_options with strict; single_line }
+              in
               Bibtex.pretty_print_bibtex ~options parse_result.items
           in
 
@@ -108,6 +112,12 @@ let () =
     in
     Arg.(value & flag & info [ "s"; "strict" ] ~doc)
   in
+  let single_line =
+    let doc =
+      "Force field values onto a single line by replacing newlines with a space."
+    in
+    Arg.(value & flag & info [ "l"; "single-line" ] ~doc)
+  in
   let quiet =
     let doc = "Quiet mode: suppress all output except errors." in
     Arg.(value & flag & info [ "q"; "quiet" ] ~doc)
@@ -131,7 +141,7 @@ let () =
     Arg.(value & pos_all string [] & info [] ~docv:"FILES" ~doc)
   in
   let bibfmt_t =
-    Term.(ret (const bibfmt $ out $ strict $ quiet $ verbose $ force $ files))
+    Term.(ret (const bibfmt $ out $ strict $ single_line $ quiet $ verbose $ force $ files))
   in
   let info =
     let doc = "A little CLI tool to pretty print bibtex files." in
