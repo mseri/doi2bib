@@ -665,8 +665,28 @@ let format_entry options entry =
      if has_duplicates then
        failwith ("Duplicate fields found in entry: " ^ entry.citekey));
 
+  (* Apply filters first so alignment is based on the fields that will appear *)
+  let filtered_contents =
+    entry.contents
+    (* DOI's bibtex API adds the "month" field but raises a warning with
+    many bib engines, and it is kind of useless. So we filter it out *)
+    |> List.filter (function
+         | Field f when String.(lowercase_ascii @@ f.name) = "month" -> false
+         | _ -> true)
+    (* Drop fields with empty values *)
+    |> List.filter (function
+         | Field f -> (
+             match f.value with
+             | QuotedStringValue s
+             | BracedStringValue s
+             | UnquotedStringValue s ->
+                 String.length (String.trim s) > 0
+             | NumberValue _ -> true)
+         | EntryComment _ -> true)
+  in
+
   (* Format the entry *)
-  let format_entry =
+  let format_entry_content' =
     if options.align_entries then
       let max_field_width =
         (* Calculate maximum field name length for alignment *)
@@ -675,7 +695,7 @@ let format_entry options entry =
             match content with
             | Field field -> max acc (String.length field.name)
             | EntryComment _ -> acc)
-          0 entry.contents
+          0 filtered_contents
       in
       format_entry_content_with_padding options.capitalize_names
         options.single_line max_field_width
@@ -684,28 +704,9 @@ let format_entry options entry =
   let entry_type_str = string_of_entry_type entry.entry_type in
   let header = "@" ^ entry_type_str ^ "{" ^ entry.citekey in
   let contents_str =
-    if entry.contents = [] then ""
+    if filtered_contents = [] then ""
     else
-      let formatted_contents =
-        entry.contents
-        (* DOI's bibtex API adds the "month" field but raises a warning with
-        many bib engines, and it is kind of useless. So we filter it out *)
-        |> List.filter (function
-             | Field f when String.(lowercase_ascii @@ f.name) = "month" ->
-                 false
-             | _ -> true)
-        (* Drop fields with empty values *)
-        |> List.filter (function
-             | Field f -> (
-                 match f.value with
-                 | QuotedStringValue s
-                 | BracedStringValue s
-                 | UnquotedStringValue s ->
-                     String.length (String.trim s) > 0
-                 | NumberValue _ -> true)
-             | EntryComment _ -> true)
-        |> List.map format_entry
-      in
+      let formatted_contents = List.map format_entry_content' filtered_contents in
       let rec add_commas_except_last = function
         | [] -> []
         | [ last ] -> [ last ] (* No comma for the last item *)

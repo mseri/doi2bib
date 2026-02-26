@@ -587,6 +587,78 @@ Test multiple duplicate citekeys in strict mode
     AUTHOR = "Author Four"
   }
 
+Test -l option collapses newlines in field values to a single space
+  $ cat > multiline.bib << 'EOF'
+  > @article{MultilineTest,
+  >   title = "A title that spans
+  > multiple lines",
+  >   abstract = {An abstract
+  > on two lines},
+  >   author = "Single Line Author",
+  >   year = 2023
+  > }
+  > EOF
+
+  $ bibfmt -l multiline.bib
+  @article{MultilineTest,
+    TITLE    = "A title that spans multiple lines",
+    ABSTRACT = {An abstract on two lines},
+    AUTHOR   = "Single Line Author",
+    YEAR     = 2023
+  }
+
+Test -l option with --single-line long form
+  $ bibfmt --single-line multiline.bib
+  @article{MultilineTest,
+    TITLE    = "A title that spans multiple lines",
+    ABSTRACT = {An abstract on two lines},
+    AUTHOR   = "Single Line Author",
+    YEAR     = 2023
+  }
+
+Test -l option with \r\n line endings
+  $ printf '@article{CRLFTest,\n  title = "line one\r\nline two",\n  year = 2024\n}\n' > crlf.bib
+  $ bibfmt -l crlf.bib
+  @article{CRLFTest,
+    TITLE = "line one line two",
+    YEAR  = 2024
+  }
+
+Test filtering of empty fields (quoted, braced, and whitespace-only)
+  $ cat > empty_fields.bib << 'EOF'
+  > @article{EmptyFieldsTest,
+  >   title = "Valid Title",
+  >   abstract = "",
+  >   note = {},
+  >   keywords = "   ",
+  >   author = "Some Author",
+  >   year = 2023
+  > }
+  > EOF
+
+  $ bibfmt empty_fields.bib
+  @article{EmptyFieldsTest,
+    TITLE  = "Valid Title",
+    AUTHOR = "Some Author",
+    YEAR   = 2023
+  }
+
+Test that fields with only spaces are also dropped
+  $ cat > whitespace_fields.bib << 'EOF'
+  > @article{WhitespaceFieldsTest,
+  >   title = {Real Title},
+  >   note = {   },
+  >   journal = "   ",
+  >   year = 2024
+  > }
+  > EOF
+
+  $ bibfmt whitespace_fields.bib
+  @article{WhitespaceFieldsTest,
+    TITLE = {Real Title},
+    YEAR  = 2024
+  }
+
 Test quiet mode suppresses warnings and output
   $ bibfmt --quiet malformed.bib
   Warning: Found parsing errors in the BibTeX file:
