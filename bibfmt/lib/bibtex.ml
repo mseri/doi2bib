@@ -655,6 +655,16 @@ let format_entry options entry =
              | Field f when String.(lowercase_ascii @@ f.name) = "month" ->
                  false
              | _ -> true)
+        (* Drop fields with empty values *)
+        |> List.filter (function
+             | Field f -> (
+                 match f.value with
+                 | QuotedStringValue s
+                 | BracedStringValue s
+                 | UnquotedStringValue s ->
+                     String.length (String.trim s) > 0
+                 | NumberValue _ -> true)
+             | EntryComment _ -> true)
         |> List.map format_entry
       in
       let rec add_commas_except_last = function
