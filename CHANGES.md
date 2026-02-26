@@ -1,3 +1,14 @@
+# 0.9.1 (2026-02-26)
+
+- bibfmt: added `-l`/`--single-line` flag to collapse newlines within field
+  values into a single space.
+- bibfmt: field values are now trimmed of leading and trailing whitespace
+  when pretty-printing.
+- bibfmt: empty fields (values that are empty or whitespace-only after
+  trimming) are now dropped when pretty-printing.
+- bibfmt: column alignment is now computed from the fields that remain after
+  filtering, so dropped fields no longer affect padding.
+
 # 0.9.0 (2025-12-10)
 
 - bibfmt: reduced default verbosity, introduced --verbose flag to show detailed
