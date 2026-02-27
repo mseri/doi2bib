@@ -9,7 +9,7 @@
 with ocamlPackages;
 
 buildDunePackage {
-  pname = "bibfmt";
+  pname = if crossName != null then "bibfmt-${crossName}" else "bibfmt";
   version = "n/a";
   src = with nix-filter; filter {
     root = ./..;
@@ -32,13 +32,13 @@ buildDunePackage {
       ${if crossName != null then "for ${crossName}" else ""}"
 
     dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"} @install
-    ${if crossName != null then "ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}" else "echo 'No crossName link needed'"}
-    ${if crossName != null then "ln -sf _build/default/bibfmt.install _build/default/bibfmt-${crossName}.install" else "echo 'No crossName link needed'"}
   '';
-  postInstallPhase = ''
-    mkdir -p $out/bin
-    mv _build/default/bibfmt/bin/bibfmt.exe $out/bin/bibfmt
-    ${if crossName != null then "ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}" else "echo 'No crossName link needed'"}
-    ${if crossName != null then "ln -sf _build/default/bibfmt.install _build/default/bibfmt-${crossName}.install" else "echo 'No crossName link needed'"}
+
+  postBuild = lib.optionalString (crossName != null) ''
+    ln -sf bibfmt.install _build/default/bibfmt-${crossName}.install
+  '';
+
+  postInstall = lib.optionalString (crossName != null) ''
+    ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}
   '';
 }
