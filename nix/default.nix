@@ -49,4 +49,10 @@ buildDunePackage ({
     runHook postInstall
   '';
 
+} // lib.optionalAttrs (crossName != null) {
+
+  postInstall = ''
+    cp $out/${crossName}-sysroot/bin/* $out/bin/
+  '';
+
 })
