@@ -156,6 +156,15 @@ jobs:
           extra_nix_config: |
             extra-substituters = https://anmonteiro.nix-cache.workers.dev
             extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=
+      - uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ matrix.platform }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-${{ matrix.platform }}-
+          gc-max-store-size-linux: 8G
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-${{ matrix.platform }}-
+          purge-created: 0
+          purge-primary-key: never
       - name: "Run nix-build doi2bib"
         run: nix build -L .#${{ matrix.platform }}
 
