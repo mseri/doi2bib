@@ -8,7 +8,7 @@
 
 with ocamlPackages;
 
-buildDunePackage {
+buildDunePackage ({
   pname = "bibfmt";
   version = "n/a";
   src = with nix-filter; filter {
@@ -26,15 +26,19 @@ buildDunePackage {
     re
   ];
 
-  buildPhase = ''
-    echo "running\
-      ${if static then "static" else "release"} build\
-      ${if crossName != null then "for ${crossName}" else ""}"
+} // lib.optionalAttrs (crossName == null) {
 
-    dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
+  buildPhase = ''
+    runHook preBuild
+    echo "running ${if static then "static" else "release"} build"
+    dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"} @install
+    runHook postBuild
   '';
 
-  postInstall = lib.optionalString (crossName != null) ''
+} // lib.optionalAttrs (crossName != null) {
+
+  postInstall = ''
     ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}
   '';
-}
+
+})
