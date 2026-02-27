@@ -32,6 +32,8 @@ buildDunePackage {
       ${if crossName != null then "for ${crossName}" else ""}"
 
     dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"} @install
+    ${if crossName != null then "ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}" else "echo 'No crossName link needed'"}
+    ${if crossName != null then "ln -sf _build/default/bibfmt.install _build/default/bibfmt-${crossName}.install" else "echo 'No crossName link needed'"}
   '';
   postInstallPhase = ''
     mkdir -p $out/bin
