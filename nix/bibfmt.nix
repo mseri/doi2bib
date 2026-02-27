@@ -37,7 +37,7 @@ buildDunePackage ({
 } // lib.optionalAttrs (crossName != null) {
 
   postInstall = ''
-    ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}
+    cp $out/${crossName}-sysroot/bin/* $out/bin/
   '';
 
 })
