@@ -457,7 +457,7 @@ Test error handling with non-existent file
   $ bibdedup non_existent.bib
   Using deduplication keys: [title; author; year]
   Reading 1 file(s)...
-  bibdedup: Failed to read file 'non_existent.bib': Sys_error("non_existent.bib: No such file or directory")
+  bibdedup: Failed to read file 'non_existent.bib': non_existent.bib: No such file or directory
   [124]
 
 Test error handling with empty input

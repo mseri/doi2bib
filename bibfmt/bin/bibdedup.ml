@@ -179,10 +179,13 @@ let read_file filename =
         In_channel.with_open_text filename (fun ic -> In_channel.input_all ic)
     in
     Ok content
-  with e ->
-    Error
-      (Printf.sprintf "Failed to read file '%s': %s" filename
-         (Printexc.to_string e))
+  with
+  | Sys_error msg ->
+      Error (Printf.sprintf "Failed to read file '%s': %s" filename msg)
+  | e ->
+      Error
+        (Printf.sprintf "Failed to read file '%s': %s" filename
+           (Printexc.to_string e))
 
 let bibdedup keys_str interactive strict output files =
   let main () =
