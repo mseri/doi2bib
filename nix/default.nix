@@ -9,7 +9,7 @@
 
 with ocamlPackages;
 
-buildDunePackage {
+buildDunePackage ({
   pname = "doi2bib";
   version = "n/a";
   src = with nix-filter; filter {
@@ -21,7 +21,6 @@ buildDunePackage {
     ];
   };
 
-  OCAMLFIND_TOOLCHAIN = crossName;
   propagatedBuildInputs = [
     bibfmt
     astring
@@ -35,15 +34,19 @@ buildDunePackage {
     re
   ];
 
-  buildPhase = ''
-    echo "running\
-      ${if static then "static" else "release"} build\
-      ${if crossName != null then "for ${crossName}" else ""}"
+} // lib.optionalAttrs (crossName == null) {
 
+  buildPhase = ''
+    runHook preBuild
+    echo "running ${if static then "static" else "release"} build"
     dune build doi2bib/bin/doi2bib.exe -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
+    runHook postBuild
   '';
   installPhase = ''
+    runHook preInstall
     mkdir -p $out/bin
     mv _build/default/doi2bib/bin/doi2bib.exe $out/bin/doi2bib
+    runHook postInstall
   '';
-}
+
+})
