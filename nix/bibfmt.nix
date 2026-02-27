@@ -36,5 +36,6 @@ buildDunePackage {
   postInstallPhase = ''
     mkdir -p $out/bin
     mv _build/default/bibfmt/bin/bibfmt.exe $out/bin/bibfmt
+    ${if crossName != null then "ln -sf $out/bin/bibfmt $out/bin/bibfmt-${crossName}" else "echo 'No crossName link needed'"}
   '';
 }
