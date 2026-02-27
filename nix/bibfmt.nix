@@ -9,7 +9,7 @@
 with ocamlPackages;
 
 buildDunePackage {
-  pname = if crossName != null then "bibfmt-${crossName}" else "bibfmt";
+  pname = "bibfmt";
   version = "n/a";
   src = with nix-filter; filter {
     root = ./..;
@@ -31,11 +31,7 @@ buildDunePackage {
       ${if static then "static" else "release"} build\
       ${if crossName != null then "for ${crossName}" else ""}"
 
-    dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"} @install
-  '';
-
-  postBuild = lib.optionalString (crossName != null) ''
-    ln -sf bibfmt.install _build/default/bibfmt-${crossName}.install
+    dune build -p bibfmt -j $NIX_BUILD_CORES --display=short --profile=${if static then "static" else "release"}
   '';
 
   postInstall = lib.optionalString (crossName != null) ''
