@@ -28,12 +28,15 @@ jobs:
       matrix:
         os:
           - macos-latest
+          - macos-15-intel
           - ubuntu-latest
           - windows-latest
         ocaml-version:
           - 4.14.x
         include:
           - os: macos-latest
+            suffix: aarch64-apple-darwin
+          - os: macos-15-intel
             suffix: x86_64-apple-darwin
           - if: ${{ !startsWith(github.ref, 'refs/tags/') }}
             os: ubuntu-latest
