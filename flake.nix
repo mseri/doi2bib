@@ -36,7 +36,7 @@
       in
       {
         packages = {
-          inherit native bibfmt-native bibfmt-musl;
+          inherit native bibfmt-native bibfmt-musl bibfmt-arm64-musl;
           musl = pkgsMusl.lib.callPackageWith pkgsMusl ./nix {
             static = true;
             nix-filter = nix-filter.lib;
