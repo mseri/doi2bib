@@ -150,12 +150,14 @@ val format_field_value_with_url_unescaping :
     @return String representation with URLs unescaped if applicable *)
 
 val format_field : bool -> bool -> field -> string
-(** [format_field capitalized single_line field] formats a complete field (name = value).
+(** [format_field capitalized single_line field] formats a complete field (name
+    = value).
     @param field The field to format
     @return String representation of the field *)
 
 val format_entry_content : bool -> bool -> entry_content -> string
-(** [format_entry_content capitalized single_line content] formats entry content (field or comment).
+(** [format_entry_content capitalized single_line content] formats entry content
+    (field or comment).
     @param content The entry content to format
     @return String representation of the content *)
 
@@ -201,13 +203,14 @@ val find_duplicate_groups :
     Each group contains at least 2 entries that match on the specified keys. *)
 
 val string_of_field_value : field_value -> string
-(** [string_of_field_value fv] converts a field value to its string representation.
+(** [string_of_field_value fv] converts a field value to its string
+    representation.
     @param fv The field value to convert
     @return String representation of the field value *)
 
 val make_field : string -> string -> entry_content
-(** [make_field name value] creates a BibTeX field with the given name and value.
-    The value is wrapped in braces.
+(** [make_field name value] creates a BibTeX field with the given name and
+    value. The value is wrapped in braces.
     @param name Field name
     @param value Field value as a string
     @return An entry_content Field with a BracedStringValue *)

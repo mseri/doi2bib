@@ -12,7 +12,9 @@ let parse_id id =
     let n = String.length affix in
     String.length s >= n && String.sub (String.lowercase_ascii s) 0 n = affix
   in
-  let sub start s = String.trim (String.sub s start (String.length s - start)) in
+  let sub start s =
+    String.trim (String.sub s start (String.length s - start))
+  in
   match id with
   | doi when is_prefix "doi:" doi -> DOI (sub 4 doi)
   | arxiv when is_prefix "arxiv:" arxiv -> ArXiv (sub 6 arxiv)
@@ -41,14 +43,17 @@ let parse_atom id atom =
       get_attr "term" a
     in
     let bibid =
-      (match String.split_on_char ' ' authors |> List.filter (fun s -> s <> "") with
+      (match
+         String.split_on_char ' ' authors |> List.filter (fun s -> s <> "")
+       with
       | _ :: s :: _ -> s
       | s :: _ -> s
       | [] -> "")
       ^ year
-      ^ (match String.index_opt title ' ' with
-         | Some i -> String.sub title 0 i
-         | None -> "")
+      ^
+      match String.index_opt title ' ' with
+      | Some i -> String.sub title 0 i
+      | None -> ""
     in
     Printf.sprintf
       {|@misc{%s,

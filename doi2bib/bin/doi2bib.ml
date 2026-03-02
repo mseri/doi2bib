@@ -6,7 +6,9 @@ let process_id outfile id =
   let open Lwt.Syntax in
   let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
 
-  let parsed_items = Bibtex.parse_bibtex bibtex |> List.map Helpers.clean_item in
+  let parsed_items =
+    Bibtex.parse_bibtex bibtex |> List.map Helpers.clean_item
+  in
   let formatted =
     if List.length parsed_items = 0 then (
       Printf.eprintf

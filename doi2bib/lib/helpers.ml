@@ -20,7 +20,13 @@ let escape_ampersand s =
   (* We want to match '&' that is not preceded by '\', but the re library
      does not support lookbehind, so we can match either the start of the string or a non-backslash character before '&', keep it and replace
      the remaining '&' by '\&' *)
-  let re = Re.compile (Re.seq [ Re.group (Re.alt [ Re.bos; Re.compl [ Re.char '\\' ] ]); Re.char '&' ]) in
+  let re =
+    Re.compile
+      (Re.seq
+         [
+           Re.group (Re.alt [ Re.bos; Re.compl [ Re.char '\\' ] ]); Re.char '&';
+         ])
+  in
   Re.replace re
     ~f:(fun subs ->
       let prefix = Re.Group.get subs 1 in
