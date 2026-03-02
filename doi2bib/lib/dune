@@ -1,5 +1,5 @@
 (library
  (name doi2bib)
- (libraries astring cohttp-lwt-unix clz.cohttp ezxmlm lwt re unix bibfmt)
+ (libraries cohttp-lwt-unix clz.cohttp ezxmlm lwt re unix bibfmt)
  (preprocess future_syntax)
  (package doi2bib))

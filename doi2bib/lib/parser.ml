@@ -8,18 +8,17 @@ let string_of_id = function
   | PubMed s -> "PubMed ID '" ^ s ^ "'"
 
 let parse_id id =
-  let open Astring in
-  let is_prefix affix s = String.is_prefix ~affix (String.Ascii.lowercase s) in
-  let sub start s =
-    String.sub ~start s |> String.Sub.to_string |> String.trim
+  let is_prefix affix s =
+    let n = String.length affix in
+    String.length s >= n && String.sub (String.lowercase_ascii s) 0 n = affix
   in
-  let contains c s = String.exists (fun c' -> c' = c) s in
+  let sub start s = String.trim (String.sub s start (String.length s - start)) in
   match id with
   | doi when is_prefix "doi:" doi -> DOI (sub 4 doi)
   | arxiv when is_prefix "arxiv:" arxiv -> ArXiv (sub 6 arxiv)
   | pubmed when is_prefix "pmc" pubmed -> PubMed pubmed
-  | doi when contains '/' doi -> DOI (String.trim doi)
-  | arxiv when contains '.' arxiv -> ArXiv (String.trim arxiv)
+  | doi when String.contains doi '/' -> DOI (String.trim doi)
+  | arxiv when String.contains arxiv '.' -> ArXiv (String.trim arxiv)
   | _ -> raise (Parse_error id)
 
 let parse_atom id atom =
@@ -42,13 +41,14 @@ let parse_atom id atom =
       get_attr "term" a
     in
     let bibid =
-      let open Astring in
-      (match String.cuts ~empty:false ~sep:" " authors with
+      (match String.split_on_char ' ' authors |> List.filter (fun s -> s <> "") with
       | _ :: s :: _ -> s
       | s :: _ -> s
       | [] -> "")
       ^ year
-      ^ (String.cut ~sep:" " title |> Option.map fst |> Option.value ~default:"")
+      ^ (match String.index_opt title ' ' with
+         | Some i -> String.sub title 0 i
+         | None -> "")
     in
     Printf.sprintf
       {|@misc{%s,
