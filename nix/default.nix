@@ -23,7 +23,6 @@ buildDunePackage ({
 
   propagatedBuildInputs = [
     bibfmt
-    astring
     cohttp-lwt-unix
     cmdliner
     clz
