@@ -1,3 +1,8 @@
+# 0.9.2 (2026-03-03)
+
+- doi2bib: drop dependency on astring (we can do everything with ocaml 4.14+ standard library).
+- doi2bib: add some escaping of html entities that may appear in field values returned by the DOI API (e.g., `&amp;` becomes `\&`).
+
 # 0.9.1 (2026-02-26)
 
 - bibfmt: added `-l`/`--single-line` flag to collapse newlines within field
