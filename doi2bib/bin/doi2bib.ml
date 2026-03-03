@@ -6,7 +6,9 @@ let process_id outfile id =
   let open Lwt.Syntax in
   let* bibtex = Http.get_bib_entry @@ Parser.parse_id id in
 
-  let parsed_items = Bibtex.parse_bibtex bibtex in
+  let parsed_items =
+    Bibtex.parse_bibtex bibtex |> List.map Helpers.clean_item
+  in
   let formatted =
     if List.length parsed_items = 0 then (
       Printf.eprintf
@@ -88,7 +90,7 @@ let process_file outfile infile =
   let write_out () =
     let bibtex_out = Buffer.contents bibtex_buffer in
     let open Bibtex in
-    let parsed_items = parse_bibtex bibtex_out in
+    let parsed_items = parse_bibtex bibtex_out |> List.map Helpers.clean_item in
     let options = { default_options with strict = true } in
     let formatted = pretty_print_bibtex ~options parsed_items in
 

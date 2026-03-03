@@ -42,3 +42,18 @@ DOI entry containing parentheses
     YEAR      = {1989},
     PAGES     = {627-649}
   }
+DOI entry containing HTML entities and ampersands
+  $ doi2bib 10.2140/gt.2014.18.669
+  @article{Karshon_2014,
+    TITLE     = {Classification of Hamiltonian torus actions with two-dimensional quotients},
+    VOLUME    = {18},
+    ISSN      = {1465-3060},
+    URL       = {http://dx.doi.org/10.2140/gt.2014.18.669},
+    DOI       = {10.2140/gt.2014.18.669},
+    NUMBER    = {2},
+    JOURNAL   = {Geometry \& Topology},
+    PUBLISHER = {Mathematical Sciences Publishers},
+    AUTHOR    = {Karshon, Yael and Tolman, Susan},
+    YEAR      = {2014},
+    PAGES     = {669-716}
+  }

@@ -677,9 +677,8 @@ let format_entry options entry =
     |> List.filter (function
          | Field f -> (
              match f.value with
-             | QuotedStringValue s
-             | BracedStringValue s
-             | UnquotedStringValue s ->
+             | QuotedStringValue s | BracedStringValue s | UnquotedStringValue s
+               ->
                  String.length (String.trim s) > 0
              | NumberValue _ -> true)
          | EntryComment _ -> true)
@@ -706,7 +705,9 @@ let format_entry options entry =
   let contents_str =
     if filtered_contents = [] then ""
     else
-      let formatted_contents = List.map format_entry_content' filtered_contents in
+      let formatted_contents =
+        List.map format_entry_content' filtered_contents
+      in
       let rec add_commas_except_last = function
         | [] -> []
         | [ last ] -> [ last ] (* No comma for the last item *)

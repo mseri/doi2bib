@@ -55,7 +55,7 @@ let bibfmt out strict single_line quiet verbose force files =
                     "Warning: No valid BibTeX entries found in the file.\n%!";
                   combined_content)
                 else
-                   let options =
+                  let options =
                     { Bibtex.default_options with strict; single_line }
                   in
                   Bibtex.pretty_print_bibtex ~options parse_result.items)
@@ -114,7 +114,8 @@ let () =
   in
   let single_line =
     let doc =
-      "Force field values onto a single line by replacing newlines with a space."
+      "Force field values onto a single line by replacing newlines with a \
+       space."
     in
     Arg.(value & flag & info [ "l"; "single-line" ] ~doc)
   in
@@ -141,7 +142,10 @@ let () =
     Arg.(value & pos_all string [] & info [] ~docv:"FILES" ~doc)
   in
   let bibfmt_t =
-    Term.(ret (const bibfmt $ out $ strict $ single_line $ quiet $ verbose $ force $ files))
+    Term.(
+      ret
+        (const bibfmt $ out $ strict $ single_line $ quiet $ verbose $ force
+       $ files))
   in
   let info =
     let doc = "A little CLI tool to pretty print bibtex files." in
