@@ -11,7 +11,7 @@ let test_valid_bibtex () =
   assert (List.length result.items = 1);
   assert (List.length result.errors = 0);
   assert (not (Bibtex.has_parse_errors result));
-  Printf.printf "✓ Valid BibTeX parsed correctly\n"
+  Printf.printf "[PASS] Valid BibTeX parsed correctly\n"
 
 let test_malformed_bibtex () =
   let input =
@@ -37,7 +37,7 @@ let test_malformed_bibtex () =
   assert (List.length result.errors >= 1);
   (* Should have at least one error *)
   assert (Bibtex.has_parse_errors result);
-  Printf.printf "✓ Malformed BibTeX handled correctly\n"
+  Printf.printf "[PASS] Malformed BibTeX handled correctly\n"
 
 let test_completely_invalid_input () =
   let input =
@@ -54,7 +54,7 @@ More random content.|}
   (* Should parse no valid entries *)
   assert (List.length result.errors >= 1);
   (* Should have errors *)
-  Printf.printf "✓ Invalid input handled correctly\n"
+  Printf.printf "[PASS] Invalid input handled correctly\n"
 
 let test_backward_compatibility () =
   let input =
@@ -67,7 +67,7 @@ let test_backward_compatibility () =
   let new_result = Bibtex.parse_bibtex_with_errors input in
   assert (List.length old_result = List.length new_result.items);
   assert (List.length new_result.errors = 0);
-  Printf.printf "✓ Backward compatibility maintained\n"
+  Printf.printf "[PASS] Backward compatibility maintained\n"
 
 let test_error_details () =
   let input =
@@ -87,7 +87,7 @@ let test_error_details () =
       assert (error.line >= 1);
       assert (String.length error.message > 0))
     errors;
-  Printf.printf "✓ Error details provided correctly\n"
+  Printf.printf "[PASS] Error details provided correctly\n"
 
 let test_utf8_handling () =
   (* Test various UTF-8 characters in quoted strings *)
@@ -102,7 +102,7 @@ let test_utf8_handling () =
   let result = Bibtex.parse_bibtex_with_errors input_quoted in
   assert (List.length result.items = 1);
   assert (List.length result.errors = 0);
-  Printf.printf "✓ UTF-8 characters in quoted strings handled correctly\n";
+  Printf.printf "[PASS] UTF-8 characters in quoted strings handled correctly\n";
 
   (* Test various UTF-8 characters in braced strings *)
   let input_braced =
@@ -117,7 +117,7 @@ let test_utf8_handling () =
   let result2 = Bibtex.parse_bibtex_with_errors input_braced in
   assert (List.length result2.items = 1);
   assert (List.length result2.errors = 0);
-  Printf.printf "✓ UTF-8 characters in braced strings handled correctly\n";
+  Printf.printf "[PASS] UTF-8 characters in braced strings handled correctly\n";
 
   (* Test mixed UTF-8 with special BibTeX characters *)
   let input_mixed =
@@ -134,7 +134,7 @@ let test_utf8_handling () =
   assert (List.length result3.items = 1);
   assert (List.length result3.errors = 0);
   Printf.printf
-    "✓ Mixed UTF-8 with BibTeX special characters handled correctly\n";
+    "[PASS] Mixed UTF-8 with BibTeX special characters handled correctly\n";
 
   (* Test UTF-8 characters at different byte lengths *)
   let input_multilength =
@@ -149,7 +149,7 @@ let test_utf8_handling () =
   assert (List.length result4.items = 1);
   assert (List.length result4.errors = 0);
   Printf.printf
-    "✓ UTF-8 characters of different byte lengths handled correctly\n"
+    "[PASS] UTF-8 characters of different byte lengths handled correctly\n"
 
 let run_tests () =
   Printf.printf "Running BibTeX error handling tests...\n\n";
@@ -158,7 +158,6 @@ let run_tests () =
   test_completely_invalid_input ();
   test_backward_compatibility ();
   test_error_details ();
-  test_utf8_handling ();
-  Printf.printf "\n✓✓✓ All tests passed!\n"
+  test_utf8_handling ()
 
 let () = run_tests ()
