@@ -181,10 +181,10 @@ let read_file filename =
     Ok content
   with
   | Sys_error msg ->
-      Error (Printf.sprintf "Failed to read file '%s': %s" filename msg)
+      Error (Printf.sprintf "Failed to read file '%s':\n\t%s" filename msg)
   | e ->
       Error
-        (Printf.sprintf "Failed to read file '%s': %s" filename
+        (Printf.sprintf "Failed to read file '%s':\n\t%s" filename
            (Printexc.to_string e))
 
 let bibdedup keys_str interactive strict output files =
