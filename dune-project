@@ -27,4 +27,5 @@
   (depends
    (ocaml (>= 4.14.0))
    (cmdliner (>= 1.1.0))
-   (re (>= 1.0.0))))
+   (re (>= 1.0.0))
+   (alcotest (and (>= 1.5.0) :with-test))))

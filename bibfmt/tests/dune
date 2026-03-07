@@ -5,5 +5,5 @@
 
 (test
  (name test_error_handling)
- (libraries bibfmt)
+ (libraries bibfmt alcotest)
  (package bibfmt))

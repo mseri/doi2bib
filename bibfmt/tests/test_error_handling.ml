@@ -8,10 +8,9 @@ let test_valid_bibtex () =
 }|}
   in
   let result = Bibtex.parse_bibtex_with_errors input in
-  assert (List.length result.items = 1);
-  assert (List.length result.errors = 0);
-  assert (not (Bibtex.has_parse_errors result));
-  Printf.printf "[PASS] Valid BibTeX parsed correctly\n"
+  Alcotest.(check int) "should parse 1 item" 1 (List.length result.items);
+  Alcotest.(check int) "should have 0 errors" 0 (List.length result.errors);
+  Alcotest.(check bool) "has_parse_errors should be false" false (Bibtex.has_parse_errors result)
 
 let test_malformed_bibtex () =
   let input =
@@ -30,14 +29,9 @@ let test_malformed_bibtex () =
 }|}
   in
   let result = Bibtex.parse_bibtex_with_errors input in
-  Printf.printf "Parsed %d items with %d errors\n" (List.length result.items)
-    (List.length result.errors);
-  assert (List.length result.items >= 1);
-  (* Should parse at least some valid entries *)
-  assert (List.length result.errors >= 1);
-  (* Should have at least one error *)
-  assert (Bibtex.has_parse_errors result);
-  Printf.printf "[PASS] Malformed BibTeX handled correctly\n"
+  Alcotest.(check bool) "should parse at least one item" true (List.length result.items >= 1);
+  Alcotest.(check bool) "should have at least one error" true (List.length result.errors >= 1);
+  Alcotest.(check bool) "has_parse_errors should be true" true (Bibtex.has_parse_errors result)
 
 let test_completely_invalid_input () =
   let input =
@@ -47,14 +41,8 @@ Just some random text.
 More random content.|}
   in
   let result = Bibtex.parse_bibtex_with_errors input in
-  Printf.printf "Completely invalid input: %d items, %d errors\n"
-    (List.length result.items)
-    (List.length result.errors);
-  assert (List.length result.items = 0);
-  (* Should parse no valid entries *)
-  assert (List.length result.errors >= 1);
-  (* Should have errors *)
-  Printf.printf "[PASS] Invalid input handled correctly\n"
+  Alcotest.(check int) "should parse no valid entries" 0 (List.length result.items);
+  Alcotest.(check bool) "should have errors" true (List.length result.errors >= 1)
 
 let test_backward_compatibility () =
   let input =
@@ -65,9 +53,8 @@ let test_backward_compatibility () =
   in
   let old_result = Bibtex.parse_bibtex input in
   let new_result = Bibtex.parse_bibtex_with_errors input in
-  assert (List.length old_result = List.length new_result.items);
-  assert (List.length new_result.errors = 0);
-  Printf.printf "[PASS] Backward compatibility maintained\n"
+  Alcotest.(check int) "old and new API should return same count" (List.length old_result) (List.length new_result.items);
+  Alcotest.(check int) "new API should have no errors on valid input" 0 (List.length new_result.errors)
 
 let test_error_details () =
   let input =
@@ -80,18 +67,15 @@ let test_error_details () =
   in
   let result = Bibtex.parse_bibtex_with_errors input in
   let errors = Bibtex.get_parse_errors result in
-  assert (List.length errors >= 1);
+  Alcotest.(check bool) "should have at least one error" true (List.length errors >= 1);
   List.iter
     (fun error ->
-      Printf.printf "Error at line %d: %s\n" error.Bibtex.line error.message;
-      assert (error.line >= 1);
-      assert (String.length error.message > 0))
-    errors;
-  Printf.printf "[PASS] Error details provided correctly\n"
+      Alcotest.(check bool) "error line should be >= 1" true (error.Bibtex.line >= 1);
+      Alcotest.(check bool) "error message should not be empty" true (String.length error.message > 0))
+    errors
 
-let test_utf8_handling () =
-  (* Test various UTF-8 characters in quoted strings *)
-  let input_quoted =
+let test_utf8_quoted_strings () =
+  let input =
     {|@article{utf8_test1,
   title = "Étude des caractères spéciaux: ñoël, 中文, русский, العربية",
   author = "Müller, João and Гомес, أحمد",
@@ -99,13 +83,12 @@ let test_utf8_handling () =
   year = 2023
 }|}
   in
-  let result = Bibtex.parse_bibtex_with_errors input_quoted in
-  assert (List.length result.items = 1);
-  assert (List.length result.errors = 0);
-  Printf.printf "[PASS] UTF-8 characters in quoted strings handled correctly\n";
+  let result = Bibtex.parse_bibtex_with_errors input in
+  Alcotest.(check int) "should parse 1 item" 1 (List.length result.items);
+  Alcotest.(check int) "should have 0 errors" 0 (List.length result.errors)
 
-  (* Test various UTF-8 characters in braced strings *)
-  let input_braced =
+let test_utf8_braced_strings () =
+  let input =
     {|@book{utf8_test2,
   title = {Αρχαία Ελληνικά: αβγδε},
   author = {日本語の著者},
@@ -114,13 +97,12 @@ let test_utf8_handling () =
   year = {2023}
 }|}
   in
-  let result2 = Bibtex.parse_bibtex_with_errors input_braced in
-  assert (List.length result2.items = 1);
-  assert (List.length result2.errors = 0);
-  Printf.printf "[PASS] UTF-8 characters in braced strings handled correctly\n";
+  let result = Bibtex.parse_bibtex_with_errors input in
+  Alcotest.(check int) "should parse 1 item" 1 (List.length result.items);
+  Alcotest.(check int) "should have 0 errors" 0 (List.length result.errors)
 
-  (* Test mixed UTF-8 with special BibTeX characters *)
-  let input_mixed =
+let test_utf8_mixed () =
+  let input =
     {|@inproceedings{utf8_test3,
   title = "Título con acentos: ñáéíóú",
   author = "García, José and Müller, Jürgen",
@@ -130,14 +112,12 @@ let test_utf8_handling () =
   note = "Special chars: {ü}, \"ä\", \\&, \\%, \\$"
 }|}
   in
-  let result3 = Bibtex.parse_bibtex_with_errors input_mixed in
-  assert (List.length result3.items = 1);
-  assert (List.length result3.errors = 0);
-  Printf.printf
-    "[PASS] Mixed UTF-8 with BibTeX special characters handled correctly\n";
+  let result = Bibtex.parse_bibtex_with_errors input in
+  Alcotest.(check int) "should parse 1 item" 1 (List.length result.items);
+  Alcotest.(check int) "should have 0 errors" 0 (List.length result.errors)
 
-  (* Test UTF-8 characters at different byte lengths *)
-  let input_multilength =
+let test_utf8_multilength () =
+  let input =
     {|@misc{utf8_test4,
   title = "Test: à (2-byte), € (3-byte), 𝕌 (4-byte)",
   author = "Unicode Tester",
@@ -145,19 +125,27 @@ let test_utf8_handling () =
   year = 2023
 }|}
   in
-  let result4 = Bibtex.parse_bibtex_with_errors input_multilength in
-  assert (List.length result4.items = 1);
-  assert (List.length result4.errors = 0);
-  Printf.printf
-    "[PASS] UTF-8 characters of different byte lengths handled correctly\n"
+  let result = Bibtex.parse_bibtex_with_errors input in
+  Alcotest.(check int) "should parse 1 item" 1 (List.length result.items);
+  Alcotest.(check int) "should have 0 errors" 0 (List.length result.errors)
 
-let run_tests () =
-  Printf.printf "Running BibTeX error handling tests...\n\n";
-  test_valid_bibtex ();
-  test_malformed_bibtex ();
-  test_completely_invalid_input ();
-  test_backward_compatibility ();
-  test_error_details ();
-  test_utf8_handling ()
-
-let () = run_tests ()
+let () =
+  let open Alcotest in
+  run "BibTeX Error Handling"
+    [
+      ("parsing",
+       [
+         test_case "valid bibtex" `Quick test_valid_bibtex;
+         test_case "malformed bibtex" `Quick test_malformed_bibtex;
+         test_case "completely invalid input" `Quick test_completely_invalid_input;
+         test_case "backward compatibility" `Quick test_backward_compatibility;
+         test_case "error details" `Quick test_error_details;
+       ]);
+      ("utf8",
+       [
+         test_case "quoted strings" `Quick test_utf8_quoted_strings;
+         test_case "braced strings" `Quick test_utf8_braced_strings;
+         test_case "mixed utf8" `Quick test_utf8_mixed;
+         test_case "multilength utf8" `Quick test_utf8_multilength;
+       ]);
+    ]
