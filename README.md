@@ -25,54 +25,63 @@ NAME
    IDs, or PubMed IDs.
 
 SYNOPSIS
-   doi2bib [OPTION]... [FILES]...
+   doi2bib [--input=FILE] [--output=OUTPUT] [OPTION]… [ID]…
 
 DESCRIPTION
-   doi2bib reads files containing identifiers (DOIs, arXiv IDs, or
-   PubMed IDs) with one identifier per line, and fetches the
-   corresponding BibTeX entries.
+   doi2bib fetches BibTeX entries for given DOI, arXiv, or PubMed IDs.
 
-   The tool automatically infers the type of identifier. You can force
-   the CLI to lookup a DOI by using the form 'doi:ID' or an arXiv ID by
-   using the form 'arXiv:ID'. PubMed IDs always start with 'PMC'.
-
-   Use '-' as a filename to read identifiers from stdin.
+   The tool automatically infers the type of identifier. You can force the
+   lookup of a DOI by using the form 'doi:ID' or an arXiv ID by using the
+   form 'arXiv:ID'. PubMed IDs always start with 'PMC'.
 
 ARGUMENTS
-   FILES  Files containing DOIs, arXiv IDs, or PubMed IDs (one per
-          line). Use '-' to read from stdin. Multiple files can be
-          specified and will be processed sequentially.
+   ID  A DOI, an arXiv ID or a PubMed ID. The tool tries to automatically
+       infer what kind of ID you are using. You can force the cli to
+       lookup a DOI by using the form 'doi:ID' or an arXiv ID by using
+       the form 'arXiv:ID'. PubMed IDs always start with 'PMC'. Multiple
+       IDs can be provided and will be processed in order.
 
 OPTIONS
+   -i FILE, --input=FILE
+       The file is read line by line and processed sequentially, treating
+       each line as DOIs, arXiv IDs or PubMedIDs. Errors will be printed
+       on standard error but will not terminate the operation.
+
    -o OUTPUT, --output=OUTPUT (absent=stdout)
        Append the bibtex output to the specified file. It will create the
-       file if it does not exist. If not specified, writes to stdout.
+       file if it does not exist.
 
+COMMON OPTIONS
    --help[=FMT] (default=auto)
-       Show this help in format FMT. The value FMT must be one of `auto',
-       `pager', `groff' or `plain'. With `auto', the format is `pager` or
-       `plain' whenever the TERM env var is `dumb' or undefined.
+       Show this help in format FMT. The value FMT must be one of auto,
+       pager, groff or plain. With auto, the format is pager or plain
+       whenever the TERM env var is dumb or undefined.
 
    --version
        Show version information.
 
 EXAMPLES
-   Process a file containing DOIs:
-     $ doi2bib dois.txt -o bibliography.bib
+   Process a single DOI:
+     $ doi2bib 10.1007/s10569-019-9946-9
 
-   Process multiple files:
-     $ doi2bib dois.txt arxiv_ids.txt -o bibliography.bib
+   Process multiple IDs:
+     $ doi2bib 1902.00436 arXiv:1609.01724 PMC2883744
+
+   Save bibtex entry to a file:
+     $ doi2bib doi:10.4171/JST/226 -o bibliography.bib
+
+   Process a file containing identifiers:
+     $ doi2bib --input dois.txt -o bibliography.bib
 
    Read from stdin:
-     $ echo '10.1145/3357713.3384296' | doi2bib -
-
-   Combine stdin with files:
-     $ echo '10.1000/xyz123' | doi2bib - existing.txt -o output.bib
+     $ echo '10.1145/3357713.3384296' | doi2bib --input -
 
 EXIT STATUS
-   doi2bib exits with the following status:
+   doi2bib exits with:
 
    0   on success.
+
+   123 on indiscriminate errors reported on standard error.
 
    124 on command line parsing errors.
 
@@ -105,9 +114,13 @@ ARGUMENTS
           files can be specified and will be combined.
 
 OPTIONS
-   --force
+   -f, --force
        Force mode: ignore parsing errors and output only successfully
        parsed entries.
+
+   -l, --single-line
+       Force field values onto a single line by replacing newlines with a
+       space.
 
    -o OUTPUT, --output=OUTPUT (absent=stdout)
        Saves the pretty printed bib to the specified file. If not
@@ -120,10 +133,14 @@ OPTIONS
        Enable strict parsing mode that rejects BibTeX files with
        duplicate fields.
 
+   -v, --verbose
+       Enable verbose output showing which files are being read.
+
+COMMON OPTIONS
    --help[=FMT] (default=auto)
-       Show this help in format FMT. The value FMT must be one of `auto',
-       `pager', `groff' or `plain'. With `auto', the format is `pager` or
-       `plain' whenever the TERM env var is `dumb' or undefined.
+       Show this help in format FMT. The value FMT must be one of auto,
+       pager, groff or plain. With auto, the format is pager or plain
+       whenever the TERM env var is dumb or undefined.
 
    --version
        Show version information.
@@ -145,7 +162,7 @@ EXAMPLES
      $ bibfmt --strict bibliography.bib
 
 EXIT STATUS
-   bibfmt exits with the following status:
+   bibfmt exits with:
 
    0   on success.
 
@@ -186,7 +203,7 @@ OPTIONS
        Enable interactive mode to resolve conflicts. If not set,
        automatically keeps the first occurrence of conflicting fields.
 
-   -k KEYS, --keys=KEYS (absent=title,author,year)
+   -k KEYS, --keys=KEYS
        Comma-separated list of field names to use for duplicate
        detection. Special key 'citekey' matches on citation keys.
        Default: title,author,year
@@ -196,13 +213,14 @@ OPTIONS
        stdout.
 
    -s, --strict
-       Enable strict mode that checks for and reports duplicate fields
-       in entries.
+       Enable strict mode that checks for and reports duplicate fields in
+       entries.
 
+COMMON OPTIONS
    --help[=FMT] (default=auto)
-       Show this help in format FMT. The value FMT must be one of `auto',
-       `pager', `groff' or `plain'. With `auto', the format is `pager` or
-       `plain' whenever the TERM env var is `dumb' or undefined.
+       Show this help in format FMT. The value FMT must be one of auto,
+       pager, groff or plain. With auto, the format is pager or plain
+       whenever the TERM env var is dumb or undefined.
 
    --version
        Show version information.
@@ -230,9 +248,11 @@ EXAMPLES
      $ bibdedup --keys title,year file1.bib file2.bib
 
 EXIT STATUS
-   bibdedup exits with the following status:
+   bibdedup exits with:
 
    0   on success.
+
+   123 on indiscriminate errors reported on standard error.
 
    124 on command line parsing errors.
 
@@ -403,3 +423,9 @@ Since `bibfmt` reads from stdin and writes to stdout by default, it can be easil
 - [DOI Content Negotiation](https://citation.crosscite.org/docs.html)
 - [arXiv API](https://arxiv.org/help/api/index)
 - [PubMed API](https://www.ncbi.nlm.nih.gov/home/develop/api/)
+
+## Development note
+
+`doi2bib` was initially built by hand, with an initial working library before AI tooling was introduced. From that point, development was heavily assisted by Claude (via Copilot) accelerating the addition of features and tests, helping with the README and cli interface. The design, knowledge and direction remain the author's own; Claude was used as an accelerant, not an author.
+
+_I saw a similar disclaimer on [kuva's repo](https://github.com/Psy-Fer/kuva) (great project!) and decided to add it here as well, since it reflects how this project has evolved._ 
