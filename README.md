@@ -16,6 +16,109 @@ This package provides three CLI tools:
 2. **bibfmt** - Pretty print and format bibtex files (using very few dependencies)
 3. **bibdedup** - Deduplicate BibTeX entries across multiple files
 
+## Examples of use
+
+### doi2bib Examples
+
+Read index entries from standard output and produce bibtex entries (one or more at a time):
+
+```bash
+$ doi2bib 10.1007/s10569-019-9946-9
+$ doi2bib 1902.00436 arXiv:1609.01724 PMC2883744
+```
+
+Save bibtex entry to a file:
+
+```bash
+$ doi2bib doi:10.4171/JST/226 -o bibliography.bib
+```
+This will create the file if not present or append the bibliography to the existing file.
+
+You can batch-process lists of entries by listing them line by line in a file and using the `-i`,`--input` option. For instance,
+
+```bash
+$ cat dois.txt
+10.1007/s10569-019-9946-9
+1902.00436
+arXiv:1609.01724
+PMC2883744
+
+$ doi2bib -i dois.txt
+```
+
+### bibfmt Examples
+
+Format a bibtex file and print to stdout:
+
+```bash
+$ bibfmt bibliography.bib
+```
+
+Format a bibtex file and save to a new file:
+
+```bash
+$ bibfmt messy.bib -o clean.bib
+```
+
+Format bibtex content from stdin, using `-` as the filename:
+
+```bash
+$ echo "@article{key, title={My Title}, author={John Doe}}" | bibfmt -
+```
+
+Format with strict mode to check for duplicate fields (these can be removed
+with `bibdedup`):
+
+```bash
+$ bibfmt bibliography.bib --strict -q
+```
+
+You can use quiet mode to suppress normal output and only see warnings/errors:
+
+```bash
+$ bibfmt messy.bib --quiet
+```
+
+Force formatting even with parsing errors, by removing all the problematic
+entries (_only do this after careful consideration_):
+
+```bash
+$ bibfmt problematic.bib --force -o partial.bib
+```
+
+### bibdedup Examples
+
+Deduplicate entries from multiple files:
+
+```bash
+$ bibdedup file1.bib file2.bib -o merged.bib
+```
+
+Use custom keys for duplicate detection:
+
+```bash
+$ bibdedup --keys doi papers1.bib papers2.bib -o output.bib
+$ bibdedup --keys title,year lib1.bib lib2.bib -o combined.bib
+```
+
+Deduplicate using citation keys:
+
+```bash
+$ bibdedup --keys citekey old.bib new.bib -o updated.bib
+```
+
+Interactive mode for conflict resolution:
+
+```bash
+$ bibdedup --interactive --keys title,author,year *.bib -o curated.bib
+```
+
+Enable strict mode to check for duplicate fields:
+
+```bash
+$ bibdedup --strict --keys doi papers.bib -o clean.bib
+```
+
 ## doi2bib Usage
 
 ```
@@ -262,109 +365,6 @@ BUGS
    Report bugs to https://github.com/mseri/doi2bib/issues
 ```
 
-## Examples
-
-### doi2bib Examples
-
-Read index entries from standard output and produce bibtex entries (one or more at a time):
-
-```bash
-$ doi2bib 10.1007/s10569-019-9946-9
-$ doi2bib 1902.00436 arXiv:1609.01724 PMC2883744
-```
-
-Save bibtex entry to a file:
-
-```bash
-$ doi2bib doi:10.4171/JST/226 -o bibliography.bib
-```
-This will create the file if not present or append the bibliography to the existing file.
-
-You can batch-process lists of entries by listing them line by line in a file and using the `-i`,`--input` option. For instance,
-
-```bash
-$ cat dois.txt
-10.1007/s10569-019-9946-9
-1902.00436
-arXiv:1609.01724
-PMC2883744
-
-$ doi2bib -i dois.txt
-```
-
-### bibfmt Examples
-
-Format a bibtex file and print to stdout:
-
-```bash
-$ bibfmt bibliography.bib
-```
-
-Format a bibtex file and save to a new file:
-
-```bash
-$ bibfmt messy.bib -o clean.bib
-```
-
-Format bibtex content from stdin, using `-` as the filename:
-
-```bash
-$ echo "@article{key, title={My Title}, author={John Doe}}" | bibfmt -
-```
-
-Format with strict mode to check for duplicate fields (these can be removed
-with `bibdedup`):
-
-```bash
-$ bibfmt bibliography.bib --strict -q
-```
-
-You can use quiet mode to suppress normal output and only see warnings/errors:
-
-```bash
-$ bibfmt messy.bib --quiet
-```
-
-Force formatting even with parsing errors, by removing all the problematic
-entries (_only do this after careful consideration_):
-
-```bash
-$ bibfmt problematic.bib --force -o partial.bib
-```
-
-### bibdedup Examples
-
-Deduplicate entries from multiple files:
-
-```bash
-$ bibdedup file1.bib file2.bib -o merged.bib
-```
-
-Use custom keys for duplicate detection:
-
-```bash
-$ bibdedup --keys doi papers1.bib papers2.bib -o output.bib
-$ bibdedup --keys title,year lib1.bib lib2.bib -o combined.bib
-```
-
-Deduplicate using citation keys:
-
-```bash
-$ bibdedup --keys citekey old.bib new.bib -o updated.bib
-```
-
-Interactive mode for conflict resolution:
-
-```bash
-$ bibdedup --interactive --keys title,author,year *.bib -o curated.bib
-```
-
-Enable strict mode to check for duplicate fields:
-
-```bash
-$ bibdedup --strict --keys doi papers.bib -o clean.bib
-```
-
 ## Installation
 
 Each release comes with attached binaries for Windows, Mac, and Linux. You can simply unpack the binaries (`doi2bib` or `bibfmt`) and place them in a folder accessible by your terminal.
@@ -426,6 +426,6 @@ Since `bibfmt` reads from stdin and writes to stdout by default, it can be easil
 
 ## Development note
 
-`doi2bib` was initially built by hand, with an initial working library before AI tooling was introduced. From that point, development was heavily assisted by Claude (via Copilot) accelerating the addition of features and tests, helping with the README and cli interface. The design, knowledge and direction remain the author's own; Claude was used as an accelerant, not an author.
+`doi2bib` was initially built by hand, with an initial working library before AI tooling was introduced. From that point, development was heavily assisted by Claude (via GitHub Copilot) accelerating the addition of features (mostly `bibfmt` and `bibdedup`) and tests, helping with the README and cli interface. The design, knowledge and direction remain the author's own; Claude was used as an accelerant, not an author.
 
-_I saw a similar disclaimer on [kuva's repo](https://github.com/Psy-Fer/kuva) (great project!) and decided to add it here as well, since it reflects how this project has evolved._ 
+_I saw a similar disclaimer on [kuva's repo](https://github.com/Psy-Fer/kuva) (great project!) and decided to add it here as well, since it reflects how this project has evolved._
