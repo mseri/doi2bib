@@ -81,6 +81,9 @@ let bib_of_pubmed ?proxy pubmed =
         ("charset", "utf-8");
       ]
   in
+  (* The API requires every tool to identify itself with the tool name and
+     a maintainer email address,
+     see https://pmc.ncbi.nlm.nih.gov/tools/id-converter-api/ *)
   let uri =
     "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?ids=" ^ pubmed
     ^ "&tool=doi2bib&email=yacht.mentees_2k@icloud.com"
